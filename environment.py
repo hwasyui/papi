@@ -4,6 +4,7 @@ from PIL import Image, ImageTk, ImageFilter
 from mathematicalOperation import MathematicalOperations
 from imageEnhancement import ImageEnhancement
 from transformAndFiltering import TransformAndFiltering
+from imageRestorationAndImageMatching import ImageMatchingAndImageRestorations
 
 class ImageEditorApp:
     def __init__(self, root):
@@ -152,6 +153,16 @@ class ImageEditorApp:
         self.create_filter_transform_tab(filter_transform_frame)
         self.operations_notebook.add(filter_transform_frame, text="Filter and Transform")
 
+        # Create Image Restoration
+        filter_transform_frame = ttk.Frame(self.operations_notebook)
+        self.create_image_restoration(filter_transform_frame)
+        self.operations_notebook.add(filter_transform_frame, text="Image Restoration")
+
+        # Create Image Restoration
+        filter_transform_frame = ttk.Frame(self.operations_notebook)
+        self.create_image_matching(filter_transform_frame)
+        self.operations_notebook.add(filter_transform_frame, text="Image Restoration")
+
 
     def create_basic_operations_tab(self, parent):
         main_frame = ttk.Frame(parent)
@@ -284,6 +295,19 @@ class ImageEditorApp:
         ttk.Button(pixel_ops_frame, text="Sobel", command=self.apply_sobel).pack(side=tk.LEFT, padx=5)
         ttk.Button(pixel_ops_frame, text="Canny", command=self.apply_canny).pack(side=tk.LEFT, padx=5)
         ttk.Button(pixel_ops_frame, text="Laplacian", command=self.apply_laplacian).pack(side=tk.LEFT, padx=5)
+
+    def create_image_restoration(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill=tk.X, padx=10, pady=10)
+        ttk.Button(main_frame, text="Apply Wiener Filter", command=self.apply_wiener).pack(pady=5)
+        ttk.Button(main_frame, text="Apply Gaussian Filter", command=self.apply_gaussian_filter).pack(pady=5)
+
+    def create_image_matching(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill=tk.X, padx=10, pady=10)
+        ttk.Button(main_frame, text="Apply SIFT Matching", command=self.apply_sift).pack(pady=5)
+        ttk.Button(main_frame, text="Apply ORB Matching", command=self.apply_orb).pack(pady=5)
+
 
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
@@ -534,6 +558,31 @@ class ImageEditorApp:
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_wiener(self):
+        if self.left_image:
+            self.result_image = ImageMatchingAndImageRestorations.wiener_filter(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_sift(self):
+        if self.left_image:
+            self.result_image = ImageMatchingAndImageRestorations.sift_detector(self.left_image, self.right_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_orb(self):
+        if self.left_image:
+            self.result_image = ImageMatchingAndImageRestorations.orb_detector(self.left_image, self.right_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
 
 
     def display_image(self, image, canvas, zoom=1.0, side='left'):
