@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk, ImageFilter
 from mathematicalOperation import MathematicalOperations
+from compression import ImageCompressor
+import numpy as np
 
 class ImageEditorApp:
     def __init__(self, root):
@@ -136,6 +138,11 @@ class ImageEditorApp:
         self.create_mathematical_operations_tab(math_ops_frame)
         self.operations_notebook.add(math_ops_frame, text="Mathematical Operations")
 
+        # Create Compression Tab
+        compression_ops_frame = ttk.Frame(self.operations_notebook)
+        self.create_compression_tab(compression_ops_frame)
+        self.operations_notebook.add(compression_ops_frame, text="Compression")
+
     def create_basic_operations_tab(self, parent):
         main_frame = ttk.Frame(parent)
         main_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -206,6 +213,81 @@ class ImageEditorApp:
         ttk.Button(bitwise_ops_frame, text="OR", command=self.bitwise_or).pack(side=tk.LEFT, padx=5)
         ttk.Button(bitwise_ops_frame, text="XOR", command=self.bitwise_xor).pack(side=tk.LEFT, padx=5)
         ttk.Button(bitwise_ops_frame, text="NOT", command=self.bitwise_not).pack(side=tk.LEFT, padx=5)
+    
+    def create_compression_tab(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        # Original File Size Display
+        self.original_size_label = ttk.Label(main_frame, text="Original File Size: ")
+        self.original_size_label.pack(pady=5)
+
+        # Compressed File Size Display
+        self.compressed_size_label = ttk.Label(main_frame, text="Compressed File Size: ")
+        self.compressed_size_label.pack(pady=5)
+
+        # Lossless Compression Button
+        btn_lossless = ttk.Button(main_frame, text="Apply Lossless Compression", command=self.apply_lossless_compression)
+        btn_lossless.pack(pady=5)
+
+        # Lossy Compression Quality Dropdown
+        self.quality_var = tk.StringVar(main_frame)
+        self.quality_var.set("Select Quality")  # Default value
+        quality_options = [10, 30, 50, 70, 90]
+        quality_dropdown = ttk.OptionMenu(main_frame, self.quality_var, *quality_options)
+        quality_dropdown.pack(pady=5)
+
+        # Apply Lossy Compression Button
+        btn_apply_lossy = ttk.Button(main_frame, text="Apply Lossy Compression", command=self.apply_lossy_compression)
+        btn_apply_lossy.pack(pady=5)
+
+    def update_file_size_display(self):
+        if self.original_image:
+            original_size = self.original_image.size[0] * self.original_image.size[1] * 3  # Approximate size in bytes
+            self.original_size_label.config(text=f"Original File Size: {original_size / 1024:.2f} KB")
+        else:
+            self.original_size_label.config(text="Original File Size: ")
+
+        if hasattr(self, 'compressed_file_size') and self.compressed_file_size > 0:
+            self.compressed_size_label.config(text=f"Compressed File Size: {self.compressed_file_size / 1024:.2f} KB")
+        else:
+            self.compressed_size_label.config(text="Compressed File Size: ")
+
+    def apply_lossless_compression(self):
+        if self.original_image:
+            compressor = ImageCompressor(self.original_image)
+            rle_encoded = compressor.apply_rle()
+            self.compressed_file_size = len(rle_encoded)  # Simulate file size after compression
+
+            # Decode RLE back to image
+            decoded_image_array = compressor.run_length_decoding(rle_encoded)
+            self.result_image = Image.fromarray(decoded_image_array)  # Convert NumPy array to PIL Image
+            messagebox.showinfo("Success", "Lossless compression applied successfully!")
+            self.update_file_size_display()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')  # Display the result image
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_lossy_compression(self):
+        if self.original_image:
+            quality = self.quality_var.get()
+            if quality == "Select Quality":
+                messagebox.showwarning("Warning", "Please select a quality for lossy compression!")
+                return
+
+            quality = int(quality)
+            compressor = ImageCompressor(self.original_image)
+            dct_encoded = compressor.apply_dct(quality)
+            self.compressed_file_size = dct_encoded.nbytes  # Simulate file size after compression
+
+            # Decode DCT back to image
+            decoded_image = compressor.inverse_dct(dct_encoded)
+            self.result_image = decoded_image  # This is already a PIL Image
+            messagebox.showinfo("Success", "Lossy compression applied successfully!")
+            self.update_file_size_display()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')  # Display the result image
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
