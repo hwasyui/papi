@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk, ImageFilter
 from mathematicalOperation import MathematicalOperations
+from imageEnhancement import ImageEnhancement
 
 class ImageEditorApp:
     def __init__(self, root):
@@ -51,9 +52,6 @@ class ImageEditorApp:
         buttons = [
             ("Open First", self.open_first_image),
             ("Open Second", self.open_second_image),
-            # ("Undo", self.redo),
-            # ("Redo", self.undo),
-            # ("Reset", self.reset),
             ("Save", self.save_image)
         ]
 
@@ -136,6 +134,11 @@ class ImageEditorApp:
         self.create_mathematical_operations_tab(math_ops_frame)
         self.operations_notebook.add(math_ops_frame, text="Mathematical Operations")
 
+        # Create Image Enhancement Tab
+        enhancement_frame = ttk.Frame(self.operations_notebook)
+        self.create_image_enhancement_tab(enhancement_frame)
+        self.operations_notebook.add(enhancement_frame, text="Image Enhancement")
+
     def create_basic_operations_tab(self, parent):
         main_frame = ttk.Frame(parent)
         main_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -207,24 +210,58 @@ class ImageEditorApp:
         ttk.Button(bitwise_ops_frame, text="XOR", command=self.bitwise_xor).pack(side=tk.LEFT, padx=5)
         ttk.Button(bitwise_ops_frame, text="NOT", command=self.bitwise_not).pack(side=tk.LEFT, padx=5)
 
+    def create_image_enhancement_tab(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        # Histogram Equalization
+        ttk.Button(main_frame, text="Histogram Equalization", command=self.apply_histogram_equalization).pack(pady=5)
+
+        # Contrast Stretching
+        contrast_frame = ttk.LabelFrame(main_frame, text="Contrast Stretching")
+        contrast_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Label(contrast_frame, text="Low In:").grid(row=0, column=0)
+        self.contrast_low_in = ttk.Scale(contrast_frame, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.contrast_low_in.grid(row=0, column=1, sticky='ew')
+
+        ttk.Label(contrast_frame, text="High In:").grid(row=1, column=0)
+        self.contrast_high_in = ttk.Scale(contrast_frame, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.contrast_high_in.grid(row=1, column=1, sticky='ew')
+
+        ttk.Label(contrast_frame, text="Low Out:").grid(row=2, column=0)
+        self.contrast_low_out = ttk.Scale(contrast_frame, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.contrast_low_out.grid(row=2, column=1, sticky='ew')
+
+        ttk.Label(contrast_frame, text="High Out:").grid(row=3, column=0)
+        self.contrast_high_out = ttk.Scale(contrast_frame, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.contrast_high_out.grid(row=3, column=1, sticky='ew')
+
+        ttk.Button(main_frame, text="Apply Contrast Stretching", command=self.apply_contrast_stretching).pack(pady=5)
+
+        # Gamma Correction
+        gamma_frame = ttk.LabelFrame(main_frame, text="Gamma Correction")
+        gamma_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Label(gamma_frame, text="Gamma:").grid(row=0, column=0)
+        self.gamma_value = ttk.Scale(gamma_frame, from_=0.1, to=5.0, orient=tk.HORIZONTAL)
+        self.gamma_value.grid(row=0, column=1, sticky='ew')
+
+        ttk.Button(main_frame, text="Apply Gamma Correction", command=self.apply_gamma_correction).pack(pady=5)
+
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
         if file_path:
             self.left_image = Image.open(file_path)
             self.original_image = self.left_image.copy()
             self.display_image(self.left_image, self.left_canvas, self.left_zoom, 'left')
+            # Do not display in result canvas immediately
 
     def open_second_image(self):
         file_path = filedialog.askopenfilename()
         if file_path:
             self.right_image = Image.open(file_path)
             self.display_image(self.right_image, self.right_canvas, self.right_zoom, 'right')
-
-    def show_history(self):
-        messagebox.showinfo("History", "History functionality not implemented.")
-
-    def show_layers(self):
-        messagebox.showinfo("Layers", "Layers functionality not implemented.")
 
     def save_image(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".png")
@@ -360,6 +397,32 @@ class ImageEditorApp:
     def bitwise_not(self):
         if self.left_image:
             self.result_image = MathematicalOperations.bitwise_not(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_histogram_equalization(self):
+        if self.left_image:
+            self.result_image = ImageEnhancement.histogram_equalization(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_contrast_stretching(self):
+        if self.left_image:
+            low_in = int(self.contrast_low_in.get())
+            high_in = int(self.contrast_high_in.get())
+            low_out = int(self.contrast_low_out.get())
+            high_out = int(self.contrast_high_out.get())
+            self.result_image = ImageEnhancement.contrast_stretching(self.left_image, low_in, high_in, low_out, high_out)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_gamma_correction(self):
+        if self.left_image:
+            gamma = self.gamma_value.get()
+            self.result_image = ImageEnhancement.gamma_correction(self.left_image, gamma)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
         else:
             messagebox.showwarning("Warning", "No image loaded!")
