@@ -5,6 +5,7 @@ from PIL import Image, ImageTk, ImageFilter
 from mathematicalOperation import MathematicalOperations
 from imageEnhancement import ImageEnhancement
 from compression import ImageCompressor
+from segmentation import ImageSegmentation
 
 class ImageEditorApp:
     def __init__(self, root):
@@ -152,6 +153,11 @@ class ImageEditorApp:
         compression_ops_frame = ttk.Frame(self.operations_notebook)
         self.create_compression_tab(compression_ops_frame)
         self.operations_notebook.add(compression_ops_frame, text="Compression")
+
+        # Create Segmentation Tab
+        segmentation_ops_frame = ttk.Frame(self.operations_notebook)
+        self.create_segmentation_tab(segmentation_ops_frame)
+        self.operations_notebook.add(segmentation_ops_frame, text="Segmentation")
 
     def create_basic_operations_tab(self, parent):
         main_frame = ttk.Frame(parent)
@@ -351,7 +357,97 @@ class ImageEditorApp:
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
+    def create_segmentation_tab(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill=tk.X, padx=10, pady=10)
 
+        # Pixel-based section
+        pixel_frame = ttk.LabelFrame(main_frame, text="Pixel-base Segementation")
+        pixel_frame.pack(fill=tk.X, pady=5)
+
+        # Edge-based Section
+        global_frame = ttk.LabelFrame(main_frame, text="Edge-Based Thresholding")
+        global_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(global_frame, text="Edge Detected", command=self.edge_detected).pack(pady=5)
+        ttk.Button(global_frame, text="Sobel", command=self.apply_edge_sobel).pack(pady=5)
+        ttk.Button(global_frame, text="Prewitt", command=self.apply_edge_prewitt).pack(pady=5)
+        ttk.Button(global_frame, text="Robert Operator", command=self.apply_edge_robert).pack(pady=5)
+
+        # Region Base Thresholding Section
+        adaptive_frame = ttk.LabelFrame(main_frame, text="Region Base")
+        adaptive_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(adaptive_frame, text="Growing", command=self.apply_region_growing).pack(pady=5)
+        ttk.Button(adaptive_frame, text="Watershed", command=self.apply_region_watershed).pack(pady=5)
+
+        # K-means Section
+        kmeans_frame = ttk.LabelFrame(main_frame, text="K-Means Clustering")
+        kmeans_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(kmeans_frame, text="Apply K-Means Clustering", command=self.apply_kmeans_clustering).pack(pady=5)
+    
+    def edge_detected(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.edge_detected()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+    
+    def apply_edge_sobel(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_edge_sobel()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+    
+    def apply_edge_prewitt(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_edge_prewitt()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_edge_robert(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_edge_robert()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_region_growing(self):
+        if self.left_image:
+            # Example seed point; you may want to get this from user input
+            seed_point = (50, 50)  # Replace with actual coordinates
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_region_growing(seed_point)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_region_watershed(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_region_watershed()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_kmeans_clustering(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_kmeans_clustering()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
