@@ -35,6 +35,10 @@ class ImageEditorApp:
         self.result_image = None
         self.original_image = None
 
+        # Undo and Redo stacks
+        self.undo_stack = []
+        self.redo_stack = []
+
         # Zoom variables
         self.left_zoom = 1.0
         self.right_zoom = 1.0
@@ -52,7 +56,10 @@ class ImageEditorApp:
         buttons = [
             ("Open First", self.open_first_image),
             ("Open Second", self.open_second_image),
-            ("Save", self.save_image)
+            ("Save", self.save_image),
+            ("Undo", self.undo_operation),
+            ("Redo", self.redo_operation),
+            ("Reset", self.reset_image)
         ]
 
         for text, command in buttons:
@@ -337,6 +344,10 @@ class ImageEditorApp:
 
         self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
 
+        # Save the current state for undo
+        self.undo_stack.append(self.original_image.copy())
+        self.redo_stack.clear()  # Clear redo stack on new operation
+
         self.crop_start_x.set(0)
         self.crop_start_y.set(0)
         self.rotate_angle.set(0)
@@ -349,6 +360,7 @@ class ImageEditorApp:
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.pixelwise_addition(self.left_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
@@ -356,6 +368,7 @@ class ImageEditorApp:
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.pixelwise_subtraction(self.left_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
@@ -363,6 +376,7 @@ class ImageEditorApp:
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.pixelwise_multiplication(self.left_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
@@ -370,6 +384,7 @@ class ImageEditorApp:
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.pixelwise_division(self.left_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
@@ -377,6 +392,7 @@ class ImageEditorApp:
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.bitwise_and(self.left_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
@@ -384,6 +400,7 @@ class ImageEditorApp:
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.bitwise_or(self.left_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
@@ -391,6 +408,7 @@ class ImageEditorApp:
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.bitwise_xor(self.left_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
@@ -398,6 +416,7 @@ class ImageEditorApp:
         if self.left_image:
             self.result_image = MathematicalOperations.bitwise_not(self.left_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
@@ -405,6 +424,7 @@ class ImageEditorApp:
         if self.left_image:
             self.result_image = ImageEnhancement.histogram_equalization(self.left_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
@@ -416,6 +436,7 @@ class ImageEditorApp:
             high_out = int(self.contrast_high_out.get())
             self.result_image = ImageEnhancement.contrast_stretching(self.left_image, low_in, high_in, low_out, high_out)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
@@ -424,6 +445,7 @@ class ImageEditorApp:
             gamma = self.gamma_value.get()
             self.result_image = ImageEnhancement.gamma_correction(self.left_image, gamma)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
@@ -457,6 +479,37 @@ class ImageEditorApp:
             x = (canvas_width - scaled_image.width) // 2
             y = (canvas_height - scaled_image.height) // 2
             canvas.create_image(x, y, anchor=tk.NW, image=self.result_tk_image)
+
+    def save_state_for_undo(self):
+        if self.result_image:
+            self.undo_stack.append(self.result_image.copy())
+            self.redo_stack.clear()  # Clear redo stack on new operation
+
+    def undo_operation(self):
+        if self.undo_stack:
+            self.redo_stack.append(self.undo_stack.pop())
+            if self.undo_stack:
+                self.result_image = self.undo_stack[-1]
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            else:
+                self.result_image = self.original_image
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        else:
+            messagebox.showwarning("Warning", "No operation to undo!")
+
+    def redo_operation(self):
+        if self.redo_stack:
+            self.result_image = self.redo_stack.pop()
+            self.undo_stack.append(self.result_image.copy())
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        else:
+            messagebox.showwarning("Warning", "No operation to redo!")
+
+    def reset_image(self):
+        self.result_image = self.original_image.copy() if self.original_image else None
+        self.undo_stack.clear()
+        self.redo_stack.clear()
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
 
 if __name__ == "__main__":
     root = tk.Tk()
