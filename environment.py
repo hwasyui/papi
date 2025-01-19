@@ -1,8 +1,11 @@
 import tkinter as tk
+import numpy as np
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk, ImageFilter
 from mathematicalOperation import MathematicalOperations
 from imageEnhancement import ImageEnhancement
+from compression import ImageCompressor
+from segmentation import ImageSegmentation
 
 class ImageEditorApp:
     def __init__(self, root):
@@ -146,6 +149,16 @@ class ImageEditorApp:
         self.create_image_enhancement_tab(enhancement_frame)
         self.operations_notebook.add(enhancement_frame, text="Image Enhancement")
 
+        # Create Compression Tab
+        compression_ops_frame = ttk.Frame(self.operations_notebook)
+        self.create_compression_tab(compression_ops_frame)
+        self.operations_notebook.add(compression_ops_frame, text="Compression")
+
+        # Create Segmentation Tab
+        segmentation_ops_frame = ttk.Frame(self.operations_notebook)
+        self.create_segmentation_tab(segmentation_ops_frame)
+        self.operations_notebook.add(segmentation_ops_frame, text="Segmentation")
+
     def create_basic_operations_tab(self, parent):
         main_frame = ttk.Frame(parent)
         main_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -255,6 +268,186 @@ class ImageEditorApp:
         self.gamma_value.grid(row=0, column=1, sticky='ew')
 
         ttk.Button(main_frame, text="Apply Gamma Correction", command=self.apply_gamma_correction).pack(pady=5)
+    
+    def create_compression_tab(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill='x', padx=10, pady=10)
+
+        self.original_size_label = ttk.Label(main_frame, text="Original File Size: ")
+        self.original_size_label.pack(pady=5)
+
+        self.compressed_size_label = ttk.Label(main_frame, text="Compressed File Size: ")
+        self.compressed_size_label.pack(pady=5)
+
+        btn_lossless = ttk.Button(main_frame, text="Apply Lossless Compression", command=self.apply_lossless_compression)
+        btn_lossless.pack(pady=5)
+
+        self.quality_var = tk.StringVar(main_frame)
+        self.quality_var.set("Select Quality")
+        quality_options = [10, 30, 50, 70, 90]
+        quality_dropdown = ttk.OptionMenu(main_frame, self.quality_var, *quality_options)
+        quality_dropdown.pack(pady=5)
+
+        btn_apply_lossy = ttk.Button(main_frame, text="Apply Lossy Compression", command=self.apply_lossy_compression)
+        btn_apply_lossy.pack(pady=5)
+
+    def update_file_size_display(self):
+        if self.original_image:
+            original_size = self.original_image.size[0] * self.original_image.size[1] * 3
+            self.original_size_label.config(text=f"Original File Size: {original_size / 1024:.2f} KB")
+        else:
+            self.original_size_label.config(text="Original File Size: ")
+
+        if hasattr(self, 'compressed_file_size') and self.compressed_file_size > 0:
+            self.compressed_size_label.config(text=f"Compressed File Size: {self.compressed_file_size / 1024:.2f} KB")
+        else:
+            self.compressed_size_label.config(text="Compressed File Size: ")
+
+    def apply_lossless_compression(self):
+        if self.original_image:
+            compressor = ImageCompressor(self.original_image)
+            rle_encoded = compressor.apply_rle()
+            self.compressed_file_size = len(rle_encoded) * 2
+            decoded_image_array = compressor.run_length_decoding(rle_encoded)
+            self.result_image = Image.fromarray(decoded_image_array, mode='L')
+            
+            # Display the result image in the result canvas
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            
+            messagebox.showinfo("Success", "Lossless compression applied successfully!")
+            self.update_file_size_display()
+            
+            # Save the current state for undo
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_lossy_compression(self):
+        if self.original_image:
+            quality = self.quality_var.get()
+            if quality == "Select Quality":
+                messagebox.showwarning("Warning", "Please select a quality for lossy compression!")
+                return
+
+            quality = int(quality)
+            compressor = ImageCompressor(self.original_image)
+
+            # Apply DCT and get encoded data
+            dct_encoded = compressor.apply_dct(quality)
+
+            # Calculate compressed size based on non-zero coefficients
+            self.compressed_file_size = np.count_nonzero(dct_encoded) * 2  # Approximate byte size
+
+            # Decode the image from DCT
+            decoded_image = compressor.inverse_dct(dct_encoded)
+
+            # Convert to PIL Image and display
+            if isinstance(decoded_image, np.ndarray):
+                self.result_image = Image.fromarray(decoded_image.astype(np.uint8))
+            else:
+                messagebox.showwarning("Warning", "Decoded image is not in the expected format!")
+                return
+
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            messagebox.showinfo("Success", "Lossy compression applied successfully!")
+            self.update_file_size_display()
+            
+            # Save the current state for undo
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def create_segmentation_tab(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        # Pixel-based section
+        pixel_frame = ttk.LabelFrame(main_frame, text="Pixel-base Segementation")
+        pixel_frame.pack(fill=tk.X, pady=5)
+
+        # Edge-based Section
+        global_frame = ttk.LabelFrame(main_frame, text="Edge-Based Thresholding")
+        global_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(global_frame, text="Edge Detected", command=self.edge_detected).pack(pady=5)
+        ttk.Button(global_frame, text="Sobel", command=self.apply_edge_sobel).pack(pady=5)
+        ttk.Button(global_frame, text="Prewitt", command=self.apply_edge_prewitt).pack(pady=5)
+        ttk.Button(global_frame, text="Robert Operator", command=self.apply_edge_robert).pack(pady=5)
+
+        # Region Base Thresholding Section
+        adaptive_frame = ttk.LabelFrame(main_frame, text="Region Base")
+        adaptive_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(adaptive_frame, text="Growing", command=self.apply_region_growing).pack(pady=5)
+        ttk.Button(adaptive_frame, text="Watershed", command=self.apply_region_watershed).pack(pady=5)
+
+        # K-means Section
+        kmeans_frame = ttk.LabelFrame(main_frame, text="K-Means Clustering")
+        kmeans_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(kmeans_frame, text="Apply K-Means Clustering", command=self.apply_kmeans_clustering).pack(pady=5)
+    
+    def edge_detected(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.edge_detected()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+    
+    def apply_edge_sobel(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_edge_sobel()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+    
+    def apply_edge_prewitt(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_edge_prewitt()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_edge_robert(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_edge_robert()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_region_growing(self):
+        if self.left_image:
+            # Example seed point; you may want to get this from user input
+            seed_point = (50, 50)  # Replace with actual coordinates
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_region_growing(seed_point)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_region_watershed(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_region_watershed()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_kmeans_clustering(self):
+        if self.left_image:
+            segmentation = ImageSegmentation(self.left_image)
+            self.result_image = segmentation.apply_kmeans_clustering()
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
@@ -510,6 +703,7 @@ class ImageEditorApp:
         self.undo_stack.clear()
         self.redo_stack.clear()
         self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        self.update_file_size_display() 
 
 if __name__ == "__main__":
     root = tk.Tk()
