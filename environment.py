@@ -71,12 +71,21 @@ class ImageEditorApp:
             ("Save", self.save_image),
             ("Undo", self.undo_operation),
             ("Redo", self.redo_operation),
-            ("Reset", self.reset_image)
-        ]
+            ("Reset", self.reset_image),
+            ("Delete Image 1", self.delete_first_image),
+            ("Delete Image 2", self.delete_second_image),
+            ("Delete Result", self.delete_result_image)
+            ]
 
         for text, command in buttons:
             btn = ttk.Button(self.top_panel, text=text, command=command)
             btn.pack(side=tk.LEFT, padx=5, pady=5)
+
+    def get_base_image(self):
+        """
+        Return the current result image if it exists, otherwise return the original left image.
+        """
+        return self.result_image if self.result_image else self.left_image
 
     def create_image_sections(self):
         self.left_frame = ttk.Frame(self.content_frame)
@@ -623,6 +632,30 @@ class ImageEditorApp:
 
         ttk.Button(skeleton_frame, text="Skeletonize", command=self.apply_skeletonization).pack(pady=5)
 
+    def delete_first_image(self):
+        if self.left_image:
+            self.left_image = None
+            self.original_image = None
+            self.result_image = None
+            self.display_image(self.left_image, self.left_canvas, self.left_zoom, 'left')  # Clear the left canvas
+        else:
+            messagebox.showwarning("Warning", "No first image to delete!")
+
+    def delete_second_image(self):
+        if self.right_image:
+            self.right_image = None
+            self.display_image(self.right_image, self.right_canvas, self.right_zoom, 'right')  # Clear the right canvas
+        else:
+            messagebox.showwarning("Warning", "No second image to delete!")
+
+    def delete_result_image(self):
+        if self.result_image:
+            self.result_image = None
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')  # Clear the result canvas
+        else:
+            messagebox.showwarning("Warning", "No result image to delete!")
+
+
 
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
@@ -661,54 +694,66 @@ class ImageEditorApp:
 
 
     def apply_grayscale(self):
-        if self.left_image:
-            self.result_image = basicOperations.to_grayscale(self.left_image)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        self.result_image = basicOperations.to_grayscale(base_image)
+        self.save_state_for_undo()
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+
+
 
     def apply_negative(self):
-        if self.left_image:
-            self.result_image = basicOperations.to_negative(self.left_image)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        self.save_state_for_undo()
+        self.result_image = basicOperations.to_negative(base_image)
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
 
     def apply_horizontal_flip(self):
-        if self.left_image:
-            self.result_image = basicOperations.horizontal_flip(self.left_image)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        self.save_state_for_undo()
+        self.result_image = basicOperations.horizontal_flip(base_image)
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+
 
     def apply_vertical_flip(self):
-        if self.left_image:
-            self.result_image = basicOperations.vertical_flip(self.left_image)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        self.save_state_for_undo()
+        self.result_image = basicOperations.vertical_flip(base_image)
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
 
     def apply_diagonal_flip(self):
-        if self.left_image:
-            self.result_image = basicOperations.diagonal_flip(self.left_image)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        self.save_state_for_undo()
+        self.result_image = basicOperations.diagonal_flip(base_image)
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+
 
     def apply_crop_method1(self):
-        if self.left_image:
+        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
+        base_image = self.get_base_image()
+
+        if base_image:
             try:
                 # Ambil nilai width dan height dari input
                 width = int(self.crop_width.get())
                 height = int(self.crop_height.get())
 
-                # Lakukan cropping
-                self.result_image = basicOperations.crop_image(self.left_image, width, height)
+                # Lakukan cropping pada gambar dasar
+                self.result_image = basicOperations.crop_image(base_image, width, height)
 
                 # Tampilkan hasil gambar dan simpan state untuk undo
                 self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
@@ -719,13 +764,16 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_crop_method2(self):
-        if self.left_image:
+        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
+        base_image = self.get_base_image()
+
+        if base_image:
             try:
                 # Ambil bentuk dari dropdown
                 shape = self.shape_var.get()
 
                 # Lakukan cropping berdasarkan bentuk
-                self.result_image = basicOperations.crop_image_by_shape(self.left_image, shape)
+                self.result_image = basicOperations.crop_image_by_shape(base_image, shape)
 
                 # Tampilkan hasil gambar dan simpan state untuk undo
                 self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
@@ -734,58 +782,122 @@ class ImageEditorApp:
                 messagebox.showerror("Error", f"An error occurred: {e}")
         else:
             messagebox.showwarning("Warning", "No image loaded!")
- 
+
 
 
     def apply_translation(self):
-        if self.left_image:
-            right = int(self.translate_right.get())
-            left = int(self.translate_left.get())
-            up = int(self.translate_up.get())
-            down = int(self.translate_down.get())
+        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
+        base_image = self.get_base_image()
 
-            # Hitung pergeseran berdasarkan input slider
-            self.result_image = basicOperations.translate(self.left_image, right, left, up, down)
+        if base_image:
+            try:
+                # Ambil nilai dari slider untuk pergeseran
+                right = int(self.translate_right.get())
+                left = int(self.translate_left.get())
+                up = int(self.translate_up.get())
+                down = int(self.translate_down.get())
 
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
+                # Hitung pergeseran berdasarkan input slider
+                self.result_image = basicOperations.translate(base_image, right, left, up, down)
+
+                # Tampilkan hasil gambar dan simpan state untuk undo
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except ValueError:
+                messagebox.showerror("Error", "Invalid translation values. Please enter valid integers.")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
         else:
             messagebox.showwarning("Warning", "No image loaded!")
+
 
     def apply_scaling(self):
-        if self.left_image:
-            scale_x = self.scale_x.get()
-            scale_y = self.scale_y.get()
-            self.result_image = basicOperations.scale(self.left_image, scale_x, scale_y)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
+        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
+        base_image = self.get_base_image()
+
+        if base_image:
+            try:
+                # Ambil nilai skala dari input (misalnya slider atau entry box)
+                scale_x = float(self.scale_x.get())
+                scale_y = float(self.scale_y.get())
+
+                # Lakukan operasi scaling pada gambar dasar
+                self.result_image = basicOperations.scale(base_image, scale_x, scale_y)
+
+                # Tampilkan hasil gambar dan simpan state untuk undo
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except ValueError:
+                messagebox.showerror("Error", "Invalid scaling values. Please enter valid numbers.")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
         else:
             messagebox.showwarning("Warning", "No image loaded!")
+
 
     def apply_rgb_intensity(self):
-        if self.left_image:
-            red = int(self.intensity_red.get())
-            green = int(self.intensity_green.get())
-            blue = int(self.intensity_blue.get())
-            self.result_image = basicOperations.adjust_rgb_intensity(self.left_image, red, green, blue)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
+        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
+        base_image = self.get_base_image()
 
-    def apply_border(self):
-        if self.left_image:
-            thickness = int(self.border_thickness.get())
-            color = self.border_color.get() or "black"  # Default to black if no color specified
-            self.result_image = basicOperations.add_border(self.left_image, thickness, color)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
+        if base_image:
+            try:
+                # Ambil nilai intensitas RGB dari input
+                red = int(self.intensity_red.get())
+                green = int(self.intensity_green.get())
+                blue = int(self.intensity_blue.get())
+
+                # Validasi nilai intensitas (contoh: range 0-255)
+                if not (0 <= red <= 255 and 0 <= green <= 255 and 0 <= blue <= 255):
+                    raise ValueError("RGB intensity values must be between 0 and 255.")
+
+                # Lakukan operasi penyesuaian intensitas RGB
+                self.result_image = basicOperations.adjust_rgb_intensity(base_image, red, green, blue)
+
+                # Tampilkan hasil gambar dan simpan state untuk undo
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+
+            except ValueError as e:
+                messagebox.showerror("Error", f"Invalid input: {e}")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
         else:
             messagebox.showwarning("Warning", "No image loaded!")
+    def apply_border(self):
+        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
+        base_image = self.get_base_image()
+
+        if base_image:
+            try:
+                # Ambil ketebalan border dan warna dari input pengguna
+                thickness = int(self.border_thickness.get())
+                color = self.border_color.get() or "black"  # Default ke warna hitam jika tidak ada input
+
+                # Validasi ketebalan border
+                if thickness < 0:
+                    raise ValueError("Border thickness must be a non-negative integer.")
+
+                # Tambahkan border ke gambar
+                self.result_image = basicOperations.add_border(base_image, thickness, color)
+
+                # Tampilkan hasil gambar dan simpan state untuk undo
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except ValueError as e:
+                messagebox.showerror("Error", f"Invalid input: {e}")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
 
     def upload_and_drag_overlay(self):
         overlay_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
         if overlay_path:
             try:
+                # Load the overlay image
                 self.overlay_image = Image.open(overlay_path).convert("RGBA")
+                
                 if self.left_image:
                     # Resize overlay to fit the base image size
                     self.overlay_image = self.overlay_image.resize(self.left_image.size, Image.Resampling.LANCZOS)
@@ -798,35 +910,66 @@ class ImageEditorApp:
 
     def start_drag(self, event):
         """Initialize drag operation."""
-        self.overlay_start_x = event.x
-        self.overlay_start_y = event.y
+        if self.overlay_image:
+            self.overlay_start_x = event.x
+            self.overlay_start_y = event.y
 
     def do_drag(self, event):
         """Handle dragging of overlay."""
         if self.overlay_image:
+            # Calculate the drag delta
             dx = event.x - self.overlay_start_x
             dy = event.y - self.overlay_start_y
+            
+            # Update the overlay position
             self.overlay_position = (self.overlay_position[0] + dx, self.overlay_position[1] + dy)
+            
+            # Update drag start positions
             self.overlay_start_x = event.x
             self.overlay_start_y = event.y
+            
+            # Refresh the overlay preview
             self.update_overlay_preview()
 
     def update_overlay_preview(self):
         """Update the canvas to show the overlay in its current position."""
-        if self.left_image and self.overlay_image:  # Importing here to ensure modular design
-            overlay_preview = basicOperations.apply_overlay(
-                self.left_image, self.overlay_image, self.overlay_transparency.get(), self.overlay_position
-            )
-            self.display_image(overlay_preview, self.result_canvas, zoom=1.0, side='result')
+        base_image = self.get_base_image()  # Get the base image
+
+        if base_image and self.overlay_image:
+            try:
+                # Apply the overlay to the base image
+                overlay_preview = basicOperations.apply_overlay(
+                    base_image,
+                    self.overlay_image,
+                    self.overlay_transparency.get(),
+                    self.overlay_position
+                )
+
+                # Display the overlay preview
+                self.display_image(overlay_preview, self.result_canvas, zoom=1.0, side='result')
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred while updating overlay preview: {e}")
 
     def apply_overlay_to_canvas(self):
         """Apply the overlay and display the final result on the canvas."""
-        if self.left_image and self.overlay_image:  
-            self.result_image = basicOperations.apply_overlay(
-                self.left_image, self.overlay_image, self.overlay_transparency.get(), self.overlay_position
-            )
-            self.display_image(self.result_image, self.result_canvas, zoom=1.0, side='result')
-            messagebox.showinfo("Success", "Overlay applied successfully!")
+        base_image = self.get_base_image()  # Get the base image
+
+        if base_image and self.overlay_image:
+            try:
+                # Apply the overlay to the base image
+                self.result_image = basicOperations.apply_overlay(
+                    base_image,
+                    self.overlay_image,
+                    self.overlay_transparency.get(),
+                    self.overlay_position
+                )
+
+                # Display the final image and save the state for undo
+                self.display_image(self.result_image, self.result_canvas, zoom=1.0, side='result')
+                self.save_state_for_undo()
+                messagebox.showinfo("Success", "Overlay applied successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred while applying overlay: {e}")
         else:
             messagebox.showwarning("Warning", "Please upload both base image and overlay image before applying!")
 
