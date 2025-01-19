@@ -5,6 +5,8 @@ class MathematicalOperations:
     @staticmethod
     def resize_images(image1, image2):
         # Resize image2 to match image1's size
+        image1 = image1.convert("RGB")
+        image2 = image2.convert("RGB")
         return image1, image2.resize(image1.size)
 
     @staticmethod
@@ -20,17 +22,24 @@ class MathematicalOperations:
     @staticmethod
     def pixelwise_multiplication(image1, image2):
         image1, image2 = MathematicalOperations.resize_images(image1, image2)
-        arr1 = np.array(image1)
-        arr2 = np.array(image2)
-        result = np.clip(arr1 * arr2 / 255, 0, 255).astype(np.uint8)
+        arr1 = np.array(image1).astype(np.float32)  # Convert to float32 for precision
+        arr2 = np.array(image2).astype(np.float32)
+
+        # Perform multiplication and scale the result back to 0–255
+        result = np.clip((arr1 / 255) * (arr2 / 255) * 255, 0, 255).astype(np.uint8)
+
         return Image.fromarray(result)
 
     @staticmethod
     def pixelwise_division(image1, image2):
         image1, image2 = MathematicalOperations.resize_images(image1, image2)
-        arr1 = np.array(image1)
-        arr2 = np.array(image2)
-        result = np.clip(arr1 / (arr2 + 1e-10) * 255, 0, 255).astype(np.uint8)  # Avoid division by zero
+        arr1 = np.array(image1).astype(np.float32)
+        arr2 = np.array(image2).astype(np.float32)
+        
+        # Add a small value (epsilon) to avoid division by zero
+        epsilon = 1e-6
+        result = np.clip(arr1 / (arr2 + epsilon) * 255, 0, 255).astype(np.uint8)
+        
         return Image.fromarray(result)
 
     @staticmethod
