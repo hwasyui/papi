@@ -427,33 +427,39 @@ class ImageEditorApp:
             self.compressed_size_label.config(text="Compressed File Size: ")
 
     def apply_lossless_compression(self):
-        if self.original_image:
-            compressor = ImageCompressor(self.original_image)
+        # Get the base image (result image if exists, otherwise the left/original image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            compressor = ImageCompressor(base_image)
             rle_encoded = compressor.apply_rle()
             self.compressed_file_size = len(rle_encoded) * 2
             decoded_image_array = compressor.run_length_decoding(rle_encoded)
             self.result_image = Image.fromarray(decoded_image_array, mode='L')
-            
+
             # Display the result image in the result canvas
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            
+
             messagebox.showinfo("Success", "Lossless compression applied successfully!")
             self.update_file_size_display()
-            
+
             # Save the current state for undo
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_lossy_compression(self):
-        if self.original_image:
+        # Get the base image (result image if exists, otherwise the left/original image)
+        base_image = self.get_base_image()
+
+        if base_image:
             quality = self.quality_var.get()
             if quality == "Select Quality":
                 messagebox.showwarning("Warning", "Please select a quality for lossy compression!")
                 return
 
             quality = int(quality)
-            compressor = ImageCompressor(self.original_image)
+            compressor = ImageCompressor(base_image)
 
             # Apply DCT and get encoded data
             dct_encoded = compressor.apply_dct(quality)
@@ -508,8 +514,11 @@ class ImageEditorApp:
         ttk.Button(kmeans_frame, text="Apply K-Means Clustering", command=self.apply_kmeans_clustering).pack(pady=5)
     
     def edge_detected(self):
-        if self.left_image:
-            segmentation = ImageSegmentation(self.left_image)
+        # Get the base image (result image if exists, otherwise the left/original image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.edge_detected()
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
@@ -517,17 +526,24 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
     
     def apply_edge_sobel(self):
-        if self.left_image:
-            segmentation = ImageSegmentation(self.left_image)
+        # Get the base image (result image if exists, otherwise the left/original image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_edge_sobel()
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
+
     
     def apply_edge_prewitt(self):
-        if self.left_image:
-            segmentation = ImageSegmentation(self.left_image)
+        # Get the base image (result image if exists, otherwise the left/original image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_edge_prewitt()
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
@@ -535,8 +551,11 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_edge_robert(self):
-        if self.left_image:
-            segmentation = ImageSegmentation(self.left_image)
+        # Get the base image (result image if exists, otherwise the left/original image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_edge_robert()
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
@@ -544,33 +563,43 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_region_growing(self):
-        if self.left_image:
-            # Example seed point; you may want to get this from user input
+        # Menggunakan gambar basis dari get_base_image
+        base_image = self.get_base_image()
+        
+        if base_image:
+            # Contoh titik awal; ganti dengan koordinat aktual
             seed_point = (50, 50)  # Replace with actual coordinates
-            segmentation = ImageSegmentation(self.left_image)
+            segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_region_growing(seed_point)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
+
     def apply_region_watershed(self):
-        if self.left_image:
-            segmentation = ImageSegmentation(self.left_image)
+        base_image = self.get_base_image()  # Menggunakan get_base_image untuk mendapatkan gambar yang akan digunakan.
+        if base_image:
+            segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_region_watershed()
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
+
     def apply_kmeans_clustering(self):
-        if self.left_image:
-            segmentation = ImageSegmentation(self.left_image)
+        # Gunakan get_base_image untuk menentukan gambar yang akan diproses
+        base_image = self.get_base_image()
+        
+        if base_image:
+            segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_kmeans_clustering()
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
+
     
     def create_filter_transform_tab(self, parent): 
         main_frame = ttk.Frame(parent)
