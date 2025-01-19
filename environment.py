@@ -1067,33 +1067,37 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_histogram_equalization(self):
-        if self.left_image:
-            self.result_image = ImageEnhancement.histogram_equalization(self.left_image)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        self.result_image = ImageEnhancement.histogram_equalization(base_image)
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        self.save_state_for_undo()
 
     def apply_contrast_stretching(self):
-        if self.left_image:
-            low_in = int(self.contrast_low_in.get())
-            high_in = int(self.contrast_high_in.get())
-            low_out = int(self.contrast_low_out.get())
-            high_out = int(self.contrast_high_out.get())
-            self.result_image = ImageEnhancement.contrast_stretching(self.left_image, low_in, high_in, low_out, high_out)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        low_in = int(self.contrast_low_in.get())
+        high_in = int(self.contrast_high_in.get())
+        low_out = int(self.contrast_low_out.get())
+        high_out = int(self.contrast_high_out.get())
+        self.result_image = ImageEnhancement.contrast_stretching(base_image, low_in, high_in, low_out, high_out)
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        self.save_state_for_undo()
+        
 
     def apply_gamma_correction(self):
-        if self.left_image:
-            gamma = self.gamma_value.get()
-            self.result_image = ImageEnhancement.gamma_correction(self.left_image, gamma)
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+        base_image = self.get_base_image()
+        if base_image is None:
+            messagebox.showwarning("No Image", "Please upload an image first.")
+            return
+        gamma = self.gamma_value.get()
+        self.result_image = ImageEnhancement.gamma_correction(base_image, gamma)
+        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+        self.save_state_for_undo()
 
     def apply_fourier_transformation(self):
         if self.left_image:
