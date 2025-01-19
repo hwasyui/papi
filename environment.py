@@ -1,13 +1,18 @@
 import tkinter as tk
 import numpy as np
-from tkinter import ttk, messagebox, filedialog
-from PIL import Image, ImageTk, ImageFilter
+from tkinter import Scale, ttk, messagebox, filedialog
+from PIL import Image, ImageTk, ImageFilter, ImageDraw
+import cv2
+import numpy as np
 from mathematicalOperation import MathematicalOperations
 from imageEnhancement import ImageEnhancement
 from transformAndFiltering import TransformAndFiltering
 from imageRestorationAndImageMatching import ImageMatchingAndImageRestorations
 from compression import ImageCompressor
 from segmentation import ImageSegmentation
+from binaryOperation import BinaryOperation
+from basicOperation import basicOperations
+import math
 
 class ImageEditorApp:
     def __init__(self, root):
@@ -39,6 +44,8 @@ class ImageEditorApp:
         self.right_image = None
         self.result_image = None
         self.original_image = None
+        self.overlay_image = None
+        self.overlay_position = (0, 0)  # Initial position of overlay
 
         # Undo and Redo stacks
         self.undo_stack = []
@@ -177,54 +184,143 @@ class ImageEditorApp:
         self.create_segmentation_tab(segmentation_ops_frame)
         self.operations_notebook.add(segmentation_ops_frame, text="Segmentation")
 
+        # Create Image Enhancement Tab
+        binary_frame = ttk.Frame(self.operations_notebook)
+        self.create_image_binary_frame_tab(binary_frame)
+        self.operations_notebook.add(binary_frame, text="Binary Image")
+
     def create_basic_operations_tab(self, parent):
         main_frame = ttk.Frame(parent)
         main_frame.pack(fill=tk.X, padx=10, pady=10)
 
-        # Crop Section
-        crop_frame = ttk.LabelFrame(main_frame, text="Crop")
-        crop_frame.pack(fill=tk.X, pady=5)
+        # Grayscale Button
+        ttk.Button(main_frame, text="Apply Grayscale", command=self.apply_grayscale).grid(row=0, column=0, columnspan=2, pady=5, padx=10)
 
-        ttk.Label(crop_frame, text="Start X:").grid(row=0, column=0)
-        self.crop_start_x = ttk.Scale(crop_frame, from_=0, to=100, orient=tk.HORIZONTAL)
-        self.crop_start_x.grid(row=0, column=1, sticky='ew')
-        self.crop_start_x_label = ttk.Label(crop_frame, text="0")
-        self.crop_start_x_label.grid(row=0, column=2)
+        # Negative Button
+        ttk.Button(main_frame, text="Apply Negative", command=self.apply_negative).grid(row=1, column=0, columnspan=2, pady=5,padx=10)
 
-        ttk.Label(crop_frame, text="Start Y:").grid(row=1, column=0)
-        self.crop_start_y = ttk.Scale(crop_frame, from_=0, to=100, orient=tk.HORIZONTAL)
-        self.crop_start_y.grid(row=1, column=1, sticky='ew')
-        self.crop_start_y_label = ttk.Label(crop_frame, text="0")
-        self.crop_start_y_label.grid(row=1, column=2)
+        # Flip Buttons
+        flip_frame = ttk.LabelFrame(main_frame, text="Image Flipping")
+        flip_frame.grid(row=0, column=5, columnspan=2, pady=5,padx=20, sticky='ew')
 
-        # Rotate Section
-        rotate_frame = ttk.LabelFrame(main_frame, text="Rotate")
-        rotate_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(flip_frame, text="Horizontal Flip", command=self.apply_horizontal_flip).grid(row=0, column=0, padx=5, pady=5)
+        ttk.Button(flip_frame, text="Vertical Flip", command=self.apply_vertical_flip).grid(row=0, column=1, padx=5, pady=5)
+        ttk.Button(flip_frame, text="Diagonal Flip", command=self.apply_diagonal_flip).grid(row=0, column=2, padx=5, pady=5)
+        
+        # Section Crop
+        crop_frame1 = ttk.LabelFrame(main_frame, text="Cropping Method 1")
+        crop_frame1.grid(row=1, column=5, columnspan=2, padx=20, pady=5, sticky='ew')
 
-        ttk.Label(rotate_frame, text="Angle:").grid(row=0, column=0)
-        self.rotate_angle = ttk.Scale(rotate_frame, from_=0, to=360, orient=tk.HORIZONTAL)
-        self.rotate_angle.grid(row=0, column=1, sticky='ew')
-        self.rotate_angle_label = ttk.Label(rotate_frame, text="0")
-        self.rotate_angle_label.grid(row=0, column=2)
+        ttk.Label(crop_frame1, text="Width:").grid(row=0, column=0, padx=5, pady=5)
+        self.crop_width = ttk.Entry(crop_frame1)
+        self.crop_width.grid(row=0, column=1, padx=5, pady=5)
 
-        # Blur Section
-        blur_frame = ttk.LabelFrame(main_frame, text="Blur")
-        blur_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(crop_frame1, text="Height:").grid(row=1, column=0, padx=5, pady=5)
+        self.crop_height = ttk.Entry(crop_frame1)
+        self.crop_height.grid(row=1, column=1, padx=5, pady=5)
 
-        ttk.Label(blur_frame, text="Intensity:").grid(row=0, column=0)
-        self.blur_intensity = ttk.Scale(blur_frame, from_=0, to=10, orient=tk.HORIZONTAL)
-        self.blur_intensity.grid(row=0, column=1, sticky='ew') 
-        self.blur_intensity_label = ttk.Label(blur_frame, text="0")
-        self.blur_intensity_label.grid(row=0, column=2)
-    
-        # Grayscale Section
-        self.grayscale_var = tk.BooleanVar()
-        grayscale_check = ttk.Checkbutton(main_frame, text="Grayscale", variable=self.grayscale_var)
-        grayscale_check.pack(pady=5)
+        ttk.Button(crop_frame1, text="Apply Crop", command=self.apply_crop_method1).grid(row=3, column=0, columnspan=2, padx=5, pady=5, sticky='ew')
 
-        # Apply Button
-        apply_button = ttk.Button(main_frame, text="Apply", command=self.apply_basic_operations)
-        apply_button.pack(pady=10)
+        # Cropping Method 2
+        crop_frame2 = ttk.LabelFrame(main_frame, text="Cropping Method 2")
+        crop_frame2.grid(row=1, column=8, columnspan=2, padx=30, pady=5, sticky='ew')
+
+        ttk.Label(crop_frame2, text="Select Shape:").grid(row=0, column=0, padx=5, pady=5)
+        self.shape_var = tk.StringVar(value="Circle")
+        shapes = ["Star", "Diamond", "Circle"]
+        self.shape_menu = ttk.OptionMenu(crop_frame2, self.shape_var, shapes[0], *shapes)
+        self.shape_menu.grid(row=0, column=1, padx=5, pady=5)
+
+        ttk.Button(crop_frame2, text="Apply Crop", command=self.apply_crop_method2).grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky='ew')
+
+
+        # Translation Section
+        translate_frame = ttk.LabelFrame(main_frame, text="Translation")
+        translate_frame.grid(row=0, column=8, columnspan=2, padx=30, pady=5, sticky='ew')
+
+        ttk.Label(translate_frame, text="Right :").grid(row=0, column=0)
+        self.translate_right = ttk.Scale(translate_frame, from_=0, to=100, orient="horizontal")
+        self.translate_right.grid(row=0, column=1, padx=5)
+
+        ttk.Label(translate_frame, text="Left :").grid(row=1, column=0)
+        self.translate_left = ttk.Scale(translate_frame, from_=0, to=100, orient="horizontal")
+        self.translate_left.grid(row=1, column=1, padx=5)
+
+        ttk.Label(translate_frame, text="Up :").grid(row=2, column=0)
+        self.translate_up = ttk.Scale(translate_frame, from_=0, to=100, orient="horizontal")
+        self.translate_up.grid(row=2, column=1, padx=5)
+
+        ttk.Label(translate_frame, text="Down :").grid(row=3, column=0)
+        self.translate_down = ttk.Scale(translate_frame, from_=0, to=100, orient="horizontal")
+        self.translate_down.grid(row=3, column=1, padx=5)
+
+        ttk.Button(translate_frame, text="Apply Translation", command=self.apply_translation).grid(row=4, column=0, columnspan=2, pady=5)
+
+        # Scaling Section
+        scaling_frame = ttk.LabelFrame(main_frame, text="Scaling")
+        scaling_frame.grid(row=0, column=14, columnspan=2, pady=5,padx=40, sticky='ew')
+
+        ttk.Label(scaling_frame, text="Scale X:").grid(row=0, column=0)
+        self.scale_x = ttk.Scale(scaling_frame, from_=0.5, to=2.0, orient=tk.HORIZONTAL)
+        self.scale_x.grid(row=0, column=1, sticky='ew')
+
+        ttk.Label(scaling_frame, text="Scale Y:").grid(row=1, column=0)
+        self.scale_y = ttk.Scale(scaling_frame, from_=0.5, to=2.0, orient=tk.HORIZONTAL)
+        self.scale_y.grid(row=1, column=1, sticky='ew')
+
+        ttk.Button(scaling_frame, text="Apply Scaling", command=self.apply_scaling).grid(row=2, column=0, columnspan=2, pady=5)
+
+        # RGB Intensity Section
+        intensity_frame = ttk.LabelFrame(main_frame, text="RGB Intensity")
+        intensity_frame.grid(row=1, column=14, columnspan=2, pady=5,padx=40, sticky='ew')
+
+        ttk.Label(intensity_frame, text="Red:").grid(row=0, column=0)
+        self.intensity_red = ttk.Scale(intensity_frame, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.intensity_red.grid(row=0, column=1, sticky='ew')
+
+        ttk.Label(intensity_frame, text="Green:").grid(row=1, column=0)
+        self.intensity_green = ttk.Scale(intensity_frame, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.intensity_green.grid(row=1, column=1, sticky='ew')
+
+        ttk.Label(intensity_frame, text="Blue:").grid(row=2, column=0)
+        self.intensity_blue = ttk.Scale(intensity_frame, from_=0, to=255, orient=tk.HORIZONTAL)
+        self.intensity_blue.grid(row=2, column=1, sticky='ew')
+
+        ttk.Button(intensity_frame, text="Apply RGB Intensity", command=self.apply_rgb_intensity).grid(row=3, column=0, columnspan=2, pady=5)
+
+        # Border Section
+        border_frame = ttk.LabelFrame(main_frame, text="Border")
+        border_frame.grid(row=0, column=22, columnspan=2, pady=5,padx=40, sticky='ew')
+
+        ttk.Label(border_frame, text="Border Thickness:").grid(row=0, column=0)
+        self.border_thickness = ttk.Scale(border_frame, from_=1, to=10, orient=tk.HORIZONTAL)
+        self.border_thickness.grid(row=0, column=1, sticky='ew')
+
+        ttk.Label(border_frame, text="Border Color:").grid(row=1, column=0)
+        self.border_color = ttk.Entry(border_frame)
+        self.border_color.grid(row=1, column=1, sticky='ew')
+
+        ttk.Button(border_frame, text="Apply Border", command=self.apply_border).grid(row=2, column=0, columnspan=2, pady=5)
+
+        #overlay section
+        overlay_frame = ttk.LabelFrame(main_frame, text="Image Overlay")
+        overlay_frame.grid(row=1, column=22, pady=5,padx=40, sticky='ew')
+
+        ttk.Label(overlay_frame, text="Transparency:").grid(row=0, column=0)
+        self.overlay_transparency = ttk.Scale(overlay_frame, from_=0.1, to=1.0, orient=tk.HORIZONTAL)
+        self.overlay_transparency.grid(row=0, column=1, sticky='ew')
+
+        upload_button = tk.Button(overlay_frame, text="Upload and Overlay", command=self.upload_and_drag_overlay)
+        upload_button.grid(row=1, column=0, columnspan=2, pady=5)
+
+        apply_button = tk.Button(overlay_frame, text="Apply Overlay", command=self.apply_overlay_to_canvas)
+        apply_button.grid(row=2, column=0, columnspan=2, pady=5)
+
+
+        # Bind mouse events for dragging
+        self.result_canvas.bind("<Button-1>", self.start_drag)
+        self.result_canvas.bind("<B1-Motion>", self.do_drag)
+
 
     def create_mathematical_operations_tab(self, parent):
         main_frame = ttk.Frame(parent)
@@ -502,6 +598,32 @@ class ImageEditorApp:
         ttk.Button(main_frame, text="Apply ORB Matching", command=self.apply_orb).pack(pady=5)
 
 
+    def create_image_binary_frame_tab(self, parent):
+        main_frame = ttk.Frame(parent)
+        main_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        # Morphological Operations Frame
+        morph_frame = ttk.LabelFrame(main_frame, text="Morphological Operations")
+        morph_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Button(morph_frame, text="Dilation", command=self.apply_dilation).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(morph_frame, text="Erosion", command=self.apply_erosion).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(morph_frame, text="Opening", command=self.apply_opening).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(morph_frame, text="Closing", command=self.apply_closing).pack(side=tk.LEFT, padx=5, pady=5)
+
+        # Boundary Extraction Frame
+        boundary_frame = ttk.LabelFrame(main_frame, text="Boundary Extraction")
+        boundary_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Button(boundary_frame, text="Extract Boundary", command=self.apply_boundary_extraction).pack(pady=5)
+
+        # Skeletonization Frame
+        skeleton_frame = ttk.LabelFrame(main_frame, text="Skeletonization")
+        skeleton_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Button(skeleton_frame, text="Skeletonize", command=self.apply_skeletonization).pack(pady=5)
+
+
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
         if file_path:
@@ -537,70 +659,180 @@ class ImageEditorApp:
         if self.result_image:
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
 
-    def apply_basic_operations(self):
-        if not self.left_image:
+
+    def apply_grayscale(self):
+        if self.left_image:
+            self.result_image = basicOperations.to_grayscale(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
             messagebox.showwarning("Warning", "No image loaded!")
-            return
 
-        crop_x = int(self.crop_start_x.get())
-        crop_y = int(self.crop_start_y.get())
-        rotate_angle = int(self.rotate_angle.get())
-        blur_intensity = int(self.blur_intensity.get())
-        is_grayscale = self.grayscale_var.get()
+    def apply_negative(self):
+        if self.left_image:
+            self.result_image = basicOperations.to_negative(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
-        if (crop_x == 0 and crop_y == 0 and 
-            rotate_angle == 0 and 
-            blur_intensity == 0 and 
-            not is_grayscale):
-            messagebox.showinfo("No Changes", "You changed nothing!")
-            return
+    def apply_horizontal_flip(self):
+        if self.left_image:
+            self.result_image = basicOperations.horizontal_flip(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
-        confirm = messagebox.askyesno(
-            "Confirm Operation", 
-            "Upon clicking 'Ok' you won't be able to undo. Are you sure you want to proceed with these changes?"
-        )
-        
-        if not confirm:
-            return
+    def apply_vertical_flip(self):
+        if self.left_image:
+            self.result_image = basicOperations.vertical_flip(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
-        self.result_image = self.original_image.copy()
+    def apply_diagonal_flip(self):
+        if self.left_image:
+            self.result_image = basicOperations.diagonal_flip(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
-        if crop_x > 0 or crop_y > 0:
-            width = self.result_image.width
-            height = self.result_image.height
-            crop_width = int(width * (1 - crop_x / 100))
-            crop_height = int(height * (1 - crop_y / 100))
-            crop_x_start = int(width * (crop_x / 100))
-            crop_y_start = int(height * (crop_y / 100))
-            self.result_image = self.result_image.crop((
-                crop_x_start, 
-                crop_y_start, 
-                crop_x_start + crop_width, 
-                crop_y_start + crop_height
-            ))
+    def apply_crop_method1(self):
+        if self.left_image:
+            try:
+                # Ambil nilai width dan height dari input
+                width = int(self.crop_width.get())
+                height = int(self.crop_height.get())
 
-        if rotate_angle > 0:
-            self.result_image = self.result_image.rotate(rotate_angle)
+                # Lakukan cropping
+                self.result_image = basicOperations.crop_image(self.left_image, width, height)
 
-        if blur_intensity > 0:
-            self.result_image = self.result_image.filter(ImageFilter.GaussianBlur(blur_intensity))
+                # Tampilkan hasil gambar dan simpan state untuk undo
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except ValueError:
+                messagebox.showerror("Error", "Invalid width or height value. Please enter valid integers.")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
-        if is_grayscale:
-            self.result_image = self.result_image.convert("L")
+    def apply_crop_method2(self):
+        if self.left_image:
+            try:
+                # Ambil bentuk dari dropdown
+                shape = self.shape_var.get()
 
-        self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                # Lakukan cropping berdasarkan bentuk
+                self.result_image = basicOperations.crop_image_by_shape(self.left_image, shape)
 
-        # Save the current state for undo
-        self.undo_stack.append(self.original_image.copy())
-        self.redo_stack.clear()  # Clear redo stack on new operation
+                # Tampilkan hasil gambar dan simpan state untuk undo
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+ 
 
-        self.crop_start_x.set(0)
-        self.crop_start_y.set(0)
-        self.rotate_angle.set(0)
-        self.blur_intensity.set(0)
-        self.grayscale_var.set(False)
 
-        messagebox.showinfo("Success", "Image operations applied successfully!")
+    def apply_translation(self):
+        if self.left_image:
+            right = int(self.translate_right.get())
+            left = int(self.translate_left.get())
+            up = int(self.translate_up.get())
+            down = int(self.translate_down.get())
+
+            # Hitung pergeseran berdasarkan input slider
+            self.result_image = basicOperations.translate(self.left_image, right, left, up, down)
+
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_scaling(self):
+        if self.left_image:
+            scale_x = self.scale_x.get()
+            scale_y = self.scale_y.get()
+            self.result_image = basicOperations.scale(self.left_image, scale_x, scale_y)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_rgb_intensity(self):
+        if self.left_image:
+            red = int(self.intensity_red.get())
+            green = int(self.intensity_green.get())
+            blue = int(self.intensity_blue.get())
+            self.result_image = basicOperations.adjust_rgb_intensity(self.left_image, red, green, blue)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+
+    def apply_border(self):
+        if self.left_image:
+            thickness = int(self.border_thickness.get())
+            color = self.border_color.get() or "black"  # Default to black if no color specified
+            self.result_image = basicOperations.add_border(self.left_image, thickness, color)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def upload_and_drag_overlay(self):
+        overlay_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+        if overlay_path:
+            try:
+                self.overlay_image = Image.open(overlay_path).convert("RGBA")
+                if self.left_image:
+                    # Resize overlay to fit the base image size
+                    self.overlay_image = self.overlay_image.resize(self.left_image.size, Image.Resampling.LANCZOS)
+                    self.overlay_position = (0, 0)  # Reset overlay position
+                    self.update_overlay_preview()
+                else:
+                    messagebox.showwarning("Warning", "No base image loaded!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Unable to load overlay image: {e}")
+
+    def start_drag(self, event):
+        """Initialize drag operation."""
+        self.overlay_start_x = event.x
+        self.overlay_start_y = event.y
+
+    def do_drag(self, event):
+        """Handle dragging of overlay."""
+        if self.overlay_image:
+            dx = event.x - self.overlay_start_x
+            dy = event.y - self.overlay_start_y
+            self.overlay_position = (self.overlay_position[0] + dx, self.overlay_position[1] + dy)
+            self.overlay_start_x = event.x
+            self.overlay_start_y = event.y
+            self.update_overlay_preview()
+
+    def update_overlay_preview(self):
+        """Update the canvas to show the overlay in its current position."""
+        if self.left_image and self.overlay_image:  # Importing here to ensure modular design
+            overlay_preview = basicOperations.apply_overlay(
+                self.left_image, self.overlay_image, self.overlay_transparency.get(), self.overlay_position
+            )
+            self.display_image(overlay_preview, self.result_canvas, zoom=1.0, side='result')
+
+    def apply_overlay_to_canvas(self):
+        """Apply the overlay and display the final result on the canvas."""
+        if self.left_image and self.overlay_image:  
+            self.result_image = basicOperations.apply_overlay(
+                self.left_image, self.overlay_image, self.overlay_transparency.get(), self.overlay_position
+            )
+            self.display_image(self.result_image, self.result_canvas, zoom=1.0, side='result')
+            messagebox.showinfo("Success", "Overlay applied successfully!")
+        else:
+            messagebox.showwarning("Warning", "Please upload both base image and overlay image before applying!")
+
+
+
+
 
     def pixelwise_addition(self):
         if self.left_image and self.right_image:
@@ -777,6 +1009,64 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
 
 
+
+
+    def apply_dilation(self):
+        if self.left_image:
+            self.result_image = BinaryOperation.dilation(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_erosion(self):
+        if self.left_image:
+            self.result_image = BinaryOperation.erosion(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_opening(self):
+        if self.left_image:
+            self.result_image = BinaryOperation.opening(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_closing(self):
+        if self.left_image:
+            self.result_image = BinaryOperation.closing(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_boundary_extraction(self):
+        if self.left_image:
+            self.result_image = BinaryOperation.boundary_extraction(self.left_image)
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_skeletonization(self):
+        if self.left_image:
+            # Convert to grayscale and binary
+            gray_image = self.left_image.convert('L')  # Convert to grayscale
+            binary_image = np.array(gray_image)  # Convert to numpy array
+            _, binary_image = cv2.threshold(binary_image, 127, 255, cv2.THRESH_BINARY)
+            
+            # Perform skeletonization
+            skeleton_image = BinaryOperation.skeletonization(binary_image)
+            
+            # Display result
+            self.result_image = skeleton_image
+            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+            self.save_state_for_undo()
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
 
     def display_image(self, image, canvas, zoom=1.0, side='left'):
         canvas.delete("all")
