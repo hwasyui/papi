@@ -36,21 +36,15 @@ class TransformAndFiltering:
     
     @staticmethod
     def sobel_filter(image):
-        image_array = np.array(image.convert('L')) 
+        image_array = np.array(image.convert('L'))
 
-        sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
-        sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3) 
+        sobel_x = cv2.Sobel(image_array, cv2.CV_64F, 1, 0, ksize=3)
+        sobel_y = cv2.Sobel(image_array, cv2.CV_64F, 0, 1, ksize=3)
 
-        gradient_x = cv2.filter2D(image_array, cv2.CV_64F, sobel_x)
-
-        gradient_y = cv2.filter2D(image_array, cv2.CV_64F, sobel_y)
-
-        gradient_magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
-
+        gradient_magnitude = np.sqrt(sobel_x**2 + sobel_y**2)
         gradient_magnitude = (gradient_magnitude / np.max(gradient_magnitude)) * 255
         gradient_magnitude = gradient_magnitude.astype(np.uint8)
 
-        # Convert the result back to a PIL Image
         return Image.fromarray(gradient_magnitude)
     
     @staticmethod
