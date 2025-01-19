@@ -398,7 +398,7 @@ class ImageEditorApp:
 
         self.quality_var = tk.StringVar(main_frame)
         self.quality_var.set("Select Quality")
-        quality_options = [10, 30, 50, 70, 90]
+        quality_options = ["Lossy Compression", 10, 30, 50, 70, 90]
         quality_dropdown = ttk.OptionMenu(main_frame, self.quality_var, *quality_options)
         quality_dropdown.pack(pady=5)
 
