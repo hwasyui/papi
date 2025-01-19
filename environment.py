@@ -830,10 +830,6 @@ class ImageEditorApp:
         else:
             messagebox.showwarning("Warning", "Please upload both base image and overlay image before applying!")
 
-
-
-
-
     def pixelwise_addition(self):
         if self.left_image and self.right_image:
             self.result_image = MathematicalOperations.pixelwise_addition(self.left_image, self.right_image)
