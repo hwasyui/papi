@@ -684,8 +684,6 @@ class ImageEditorApp:
         else:
             messagebox.showwarning("Warning", "No result image to delete!")
 
-
-
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
         if file_path:
@@ -1084,6 +1082,12 @@ class ImageEditorApp:
         high_in = int(self.contrast_high_in.get())
         low_out = int(self.contrast_low_out.get())
         high_out = int(self.contrast_high_out.get())
+        if low_in >= high_in:
+            messagebox.showwarning("Value Error","Please input low in value less than high in.")
+            raise ValueError("low_in must be less than high_in")
+        if low_out >= high_out:
+            messagebox.showwarning("Value Error","Please input low out value less than high out.")
+            raise ValueError("low_out must be less than high_out")
         self.result_image = ImageEnhancement.contrast_stretching(base_image, low_in, high_in, low_out, high_out)
         self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
         self.save_state_for_undo()
