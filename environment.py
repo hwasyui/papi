@@ -431,6 +431,7 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
+            # Initialize compressor and perform RLE compression
             compressor = ImageCompressor(base_image)
             rle_encoded = compressor.apply_rle()
             self.compressed_file_size = len(rle_encoded) * 2
@@ -440,13 +441,27 @@ class ImageEditorApp:
             # Display the result image in the result canvas
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
 
-            messagebox.showinfo("Success", "Lossless compression applied successfully!")
+            # Display alert for autosave
+            messagebox.showinfo("Autosave", "This is autosave. Compressed image has been saved.")
+
+            # Autosave compressed image
+            save_path = filedialog.asksaveasfilename(
+                title="Save Compressed Image",
+                defaultextension=".png",
+                filetypes=[("PNG Files", "*.png"), ("JPEG Files", "*.jpg"), ("All Files", "*.*")]
+            )
+            if save_path:
+                self.result_image.save(save_path)
+                messagebox.showinfo("Success", f"Image saved successfully at: {save_path}")
+
+            # Update file size display
             self.update_file_size_display()
 
             # Save the current state for undo
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
+
 
     def apply_lossy_compression(self):
         # Get the base image (result image if exists, otherwise the left/original image)
@@ -477,10 +492,23 @@ class ImageEditorApp:
                 messagebox.showwarning("Warning", "Decoded image is not in the expected format!")
                 return
 
+            # Display the result image
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
-            messagebox.showinfo("Success", "Lossy compression applied successfully!")
+
+            # Autosave functionality
+            messagebox.showinfo("Autosave", "This is autosave. Compressed image has been saved.")
+            save_path = filedialog.asksaveasfilename(
+                title="Save Compressed Image",
+                defaultextension=".jpg",
+                filetypes=[("JPEG Files", "*.jpg"), ("PNG Files", "*.png"), ("All Files", "*.*")]
+            )
+            if save_path:
+                self.result_image.save(save_path, format="JPEG", quality=quality)
+                messagebox.showinfo("Success", f"Image saved successfully at: {save_path}")
+
+            # Update file size display
             self.update_file_size_display()
-            
+
             # Save the current state for undo
             self.save_state_for_undo()
         else:
@@ -683,8 +711,6 @@ class ImageEditorApp:
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')  # Clear the result canvas
         else:
             messagebox.showwarning("Warning", "No result image to delete!")
-
-
 
     def open_first_image(self):
         file_path = filedialog.askopenfilename()
@@ -1081,9 +1107,16 @@ class ImageEditorApp:
         high_in = int(self.contrast_high_in.get())
         low_out = int(self.contrast_low_out.get())
         high_out = int(self.contrast_high_out.get())
+        if low_in >= high_in:
+            messagebox.showwarning("Value Error","Please input low in value less than high in.")
+            raise ValueError("low_in must be less than high_in")
+        if low_out >= high_out:
+            messagebox.showwarning("Value Error","Please input low out value less than high out.")
+            raise ValueError("low_out must be less than high_out")
         self.result_image = ImageEnhancement.contrast_stretching(base_image, low_in, high_in, low_out, high_out)
         self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
         self.save_state_for_undo()
+        
 
     def apply_gamma_correction(self):
         base_image = self.get_base_image()
@@ -1094,7 +1127,6 @@ class ImageEditorApp:
         self.result_image = ImageEnhancement.gamma_correction(base_image, gamma)
         self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
         self.save_state_for_undo()
-
 
     def apply_fourier_transformation(self):
         if self.left_image:

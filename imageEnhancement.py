@@ -14,11 +14,6 @@ class ImageEnhancement:
 
     @staticmethod
     def contrast_stretching(image, low_in=0, high_in=255, low_out=0, high_out=255):
-        if low_in >= high_in:
-            raise ValueError("low_in must be less than high_in")
-        if low_out >= high_out:
-            raise ValueError("low_out must be less than high_out")
-
         if image.mode != 'L':
             image = image.convert('L')
         img_array = np.array(image, dtype=np.float32)
