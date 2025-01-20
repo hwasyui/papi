@@ -632,6 +632,14 @@ class ImageEditorApp:
     def create_image_matching(self, parent):
         main_frame = ttk.Frame(parent)
         main_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        number_of_Matching = ttk.LabelFrame(main_frame, text="Number of Matching")
+        number_of_Matching.pack(fill=tk.X, pady=5)
+
+        ttk.Label(number_of_Matching, text="Matching:").grid(row=0, column=0)
+        self.number_of_Matching = ttk.Scale(number_of_Matching, from_=0, to=50, orient=tk.HORIZONTAL)
+        self.number_of_Matching.grid(row=0, column=1, sticky='ew')
+
         ttk.Button(main_frame, text="Apply SIFT Matching", command=self.apply_sift).pack(pady=5)
         ttk.Button(main_frame, text="Apply ORB Matching", command=self.apply_orb).pack(pady=5)
 
@@ -1166,7 +1174,8 @@ class ImageEditorApp:
 
     def apply_sift(self):
         if self.left_image:
-            self.result_image = ImageMatchingAndImageRestorations.sift_detector(self.left_image, self.right_image)
+            NoM = int(self.number_of_Matching.get())
+            self.result_image = ImageMatchingAndImageRestorations.sift_detector(self.left_image, self.right_image, NoM)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
@@ -1174,7 +1183,8 @@ class ImageEditorApp:
 
     def apply_orb(self):
         if self.left_image:
-            self.result_image = ImageMatchingAndImageRestorations.orb_detector(self.left_image, self.right_image)
+            NoM = int(self.number_of_Matching.get())
+            self.result_image = ImageMatchingAndImageRestorations.orb_detector(self.left_image, self.right_image, NoM)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
