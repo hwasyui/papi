@@ -17,7 +17,7 @@ import math
 class ImageEditorApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Advanced Image Editor")
+        self.root.title("PAPI - Powerful Artistic Photo Innovator")
         
         # Make the window full screen
         self.root.state('zoomed')
