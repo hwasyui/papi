@@ -5,18 +5,18 @@ from PIL import Image
 
 class TransformAndFiltering:
     @staticmethod
+
     def fourier_transformation(image):
         dft = np.fft.fft2(image)
         dft_shift = np.fft.fftshift(dft)  
+        dft_ishift = np.fft.ifftshift(dft_shift) 
+        reconstructed_image = np.fft.ifft2(dft_ishift) 
+        reconstructed_image = np.abs(reconstructed_image)
 
-        magnitude = np.abs(dft_shift)
+        reconstructed_image = (reconstructed_image / np.max(reconstructed_image)) * 255
+        reconstructed_image = reconstructed_image.astype(np.uint8)  
 
-        # Normalize the magnitude to the range [0, 255] for visualization
-        magnitude_normalized = (magnitude / np.max(magnitude)) * 255
-        magnitude_normalized = magnitude_normalized.astype(np.uint8)
-
-        # Convert the normalized magnitude to an image
-        return Image.fromarray(magnitude_normalized)
+        return Image.fromarray(reconstructed_image)
 
     @staticmethod
     def mean_filter(image):
