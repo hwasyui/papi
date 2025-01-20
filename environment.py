@@ -683,9 +683,17 @@ class ImageEditorApp:
 
         ttk.Button(main_frame, text="Apply Fourier Transformation", command=self.apply_fourier_transformation).pack(pady=5)
 
+        
         # Filter Operations
         pixel_ops_frame = ttk.LabelFrame(main_frame, text="Filter Operations")
         pixel_ops_frame.pack(fill=tk.X, pady=5)
+
+        kernel_size_frame = ttk.Frame(pixel_ops_frame)
+        kernel_size_frame.pack(pady=5, anchor='w')
+
+        ttk.Label(kernel_size_frame, text="Kernel Size:").pack(side=tk.LEFT, padx=5)
+        self.kernel_size_slider = ttk.Scale(kernel_size_frame, from_=1, to=20, orient=tk.HORIZONTAL)
+        self.kernel_size_slider.pack(side=tk.LEFT, padx=5)
 
         ttk.Button(pixel_ops_frame, text="Mean", command=self.apply_mean_filter).pack(side=tk.LEFT, padx=5)
         ttk.Button(pixel_ops_frame, text="Gaussian", command=self.apply_gaussian_filter).pack(side=tk.LEFT, padx=5)
@@ -702,6 +710,14 @@ class ImageEditorApp:
     def create_image_restoration(self, parent):
         main_frame = ttk.Frame(parent)
         main_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        kernel_size_frame = ttk.LabelFrame(main_frame, text="Number of Matching")
+        kernel_size_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Label(kernel_size_frame, text="Kernel Size:").grid(row=0, column=0)
+        self.kernel_size_slider = ttk.Scale(kernel_size_frame, from_=1, to=20, orient=tk.HORIZONTAL)
+        self.kernel_size_slider.grid(row=0, column=1, sticky='ew')
+
         ttk.Button(main_frame, text="Apply Wiener Filter", command=self.apply_wiener).pack(pady=5)
         ttk.Button(main_frame, text="Apply Gaussian Filter", command=self.apply_gaussian_filter).pack(pady=5)
 
@@ -1261,7 +1277,8 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
-            self.result_image = TransformAndFiltering.mean_filter(base_image)
+            kernel_size = int(self.kernel_size_slider.get())
+            self.result_image = TransformAndFiltering.mean_filter(base_image, kernel_size)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
@@ -1271,7 +1288,8 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
-            self.result_image = TransformAndFiltering.med_filter(base_image)
+            kernel_size = int(self.kernel_size_slider.get())
+            self.result_image = TransformAndFiltering.med_filter(base_image, kernel_size)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
@@ -1281,7 +1299,8 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
-            self.result_image = TransformAndFiltering.gaussian_filter(base_image)
+            kernel_size = int(self.kernel_size_slider.get())
+            self.result_image = TransformAndFiltering.gaussian_filter(base_image, kernel_size)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
@@ -1322,7 +1341,8 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
-            self.result_image = ImageMatchingAndImageRestorations.wiener_filter(base_image)
+            kernel_size = int(self.kernel_size_slider.get())
+            self.result_image = ImageMatchingAndImageRestorations.wiener_filter(base_image, kernel_size)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:

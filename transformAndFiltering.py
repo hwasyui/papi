@@ -1,11 +1,9 @@
 import numpy as np
 import cv2
-from scipy.ndimage import median_filter
 from PIL import Image
 
 class TransformAndFiltering:
     @staticmethod
-
     def fourier_transformation(image):
         dft = np.fft.fft2(image)
         dft_shift = np.fft.fftshift(dft)  
@@ -19,19 +17,25 @@ class TransformAndFiltering:
         return Image.fromarray(reconstructed_image)
 
     @staticmethod
-    def mean_filter(image):
-        kernel = np.ones((5, 5), np.float32) / 25 
+    def mean_filter(image, kernel_size=5):
+        if kernel_size % 2 == 0:
+            kernel_size += 1
+        kernel = np.ones((kernel_size, kernel_size), np.float32) / (kernel_size * kernel_size)
         filtered_image = cv2.filter2D(np.array(image), -1, kernel)
-        return Image.fromarray(filtered_image)
-        
-    @staticmethod
-    def gaussian_filter(image): 
-        filtered_image = cv2.GaussianBlur(np.array(image), (5, 5), sigmaX=1)
         return Image.fromarray(filtered_image)
 
     @staticmethod
-    def med_filter(image):
-        filtered_image = median_filter(np.array(image), size=3)
+    def gaussian_filter(image, kernel_size=5): 
+        if kernel_size % 2 == 0:
+            kernel_size += 1
+        filtered_image = cv2.GaussianBlur(np.array(image), (kernel_size, kernel_size), sigmaX=1)
+        return Image.fromarray(filtered_image)
+
+    @staticmethod
+    def med_filter(image, kernel_size=3):
+        if kernel_size % 2 == 0:
+            kernel_size += 1
+        filtered_image = np.median(np.array(image), selem=np.ones((kernel_size, kernel_size)))
         return Image.fromarray(filtered_image)
     
     @staticmethod

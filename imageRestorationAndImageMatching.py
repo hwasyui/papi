@@ -6,6 +6,8 @@ from PIL import Image
 class ImageMatchingAndImageRestorations:
     @staticmethod
     def wiener_filter(image, kernel_size=5, noise_var=25, signal_var=100):
+        if kernel_size % 2 == 0:
+            kernel_size += 1
         image_array = np.array(image.convert('L')) 
 
         kernel = np.ones((kernel_size, kernel_size)) / (kernel_size * kernel_size)
