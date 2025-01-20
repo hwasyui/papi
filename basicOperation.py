@@ -241,5 +241,111 @@ class basicOperations:
             result.paste(overlay, position, overlay)
 
             return result
+    
+    
+
+
+    def adjust_brightness(image, value):
+        """
+        Adjust the brightness of the image.
+        :param image: Input PIL image.
+        :param value: Float, brightness adjustment factor (negative for decrease, positive for increase).
+        :return: Adjusted PIL image.
+        """
+        try:
+            enhancer = ImageEnhance.Brightness(image)
+            return enhancer.enhance(1 + value / 100.0)
+        except Exception as e:
+            raise RuntimeError(f"Failed to adjust brightness: {e}")
+
+
+    def adjust_contrast(image, value):
+        """
+        Adjust the contrast of the image.
+        :param image: Input PIL image.
+        :param value: Float, contrast adjustment factor (negative for decrease, positive for increase).
+        :return: Adjusted PIL image.
+        """
+        try:
+            enhancer = ImageEnhance.Contrast(image)
+            return enhancer.enhance(1 + value / 100.0)
+        except Exception as e:
+            raise RuntimeError(f"Failed to adjust contrast: {e}")
+
+
+    def rotate_image(image, angle):
+        """
+        Rotate the image by a given angle.
+        :param image: Input PIL image.
+        :param angle: Float, rotation angle in degrees (-360 to 360).
+        :return: Rotated PIL image.
+        """
+        try:
+            return image.rotate(angle, expand=True)
+        except Exception as e:
+            raise RuntimeError(f"Failed to rotate image: {e}")
+        
+    def apply_sepia(image):
+        """
+        Apply a sepia filter to the image.
+        :param image: Input PIL image.
+        :return: Image with sepia filter applied.
+        """
+        try:
+            sepia_image = image.convert("RGB")
+            pixels = sepia_image.load()
+
+            for y in range(sepia_image.height):
+                for x in range(sepia_image.width):
+                    r, g, b = pixels[x, y]
+
+                    tr = int(0.393 * r + 0.769 * g + 0.189 * b)
+                    tg = int(0.349 * r + 0.686 * g + 0.168 * b)
+                    tb = int(0.272 * r + 0.534 * g + 0.131 * b)
+
+                    pixels[x, y] = (min(255, tr), min(255, tg), min(255, tb))
+
+            return sepia_image
+        except Exception as e:
+            raise RuntimeError(f"Failed to apply sepia filter: {e}")
+        
+    def apply_cyanotype(image):
+        """
+        Apply a cyanotype filter to the image.
+        :param image: Input PIL image.
+        :return: Image with cyanotype filter applied.
+        """
+        try:
+            cyan_image = image.convert("RGB")
+            pixels = cyan_image.load()
+
+            for y in range(cyan_image.height):
+                for x in range(cyan_image.width):
+                    r, g, b = pixels[x, y]
+
+                    # Apply cyanotype effect (boost blue, reduce red/green)
+                    tr = int(r * 0.3)
+                    tg = int(g * 0.4)
+                    tb = int(b * 1.5)
+
+                    pixels[x, y] = (min(255, tr), min(255, tg), min(255, tb))
+
+            return cyan_image
+        except Exception as e:
+            raise RuntimeError(f"Failed to apply cyanotype filter: {e}")
+
+    def apply_custom_color(image, hex_color):
+        """
+        Apply a custom color filter to the image.
+        :param image: Input PIL image.
+        :param hex_color: Hex string for the filter color (e.g., "#FF5733").
+        :return: Image with custom color filter applied.
+        """
+        try:
+            # Convert HEX color to RGB
+            custom_color = Image.new("RGB", image.size, hex_color)
+            return Image.blend(image.convert("RGB"), custom_color, alpha=0.5)
+        except Exception as e:
+            raise RuntimeError(f"Failed to apply custom color filter: {e}")
 
 

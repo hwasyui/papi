@@ -210,7 +210,7 @@ class ImageEditorApp:
 
         # Flip Buttons
         flip_frame = ttk.LabelFrame(main_frame, text="Image Flipping")
-        flip_frame.grid(row=0, column=5, columnspan=2, pady=5,padx=20, sticky='ew')
+        flip_frame.grid(row=0, column=5, columnspan=2, pady=5,padx=12, sticky='ew')
 
         ttk.Button(flip_frame, text="Horizontal Flip", command=self.apply_horizontal_flip).grid(row=0, column=0, padx=5, pady=5)
         ttk.Button(flip_frame, text="Vertical Flip", command=self.apply_vertical_flip).grid(row=0, column=1, padx=5, pady=5)
@@ -218,7 +218,7 @@ class ImageEditorApp:
         
         # Section Crop
         crop_frame1 = ttk.LabelFrame(main_frame, text="Cropping Method 1")
-        crop_frame1.grid(row=1, column=5, columnspan=2, padx=20, pady=5, sticky='ew')
+        crop_frame1.grid(row=1, column=5, columnspan=2, padx=12, pady=5, sticky='ew')
 
         ttk.Label(crop_frame1, text="Width:").grid(row=0, column=0, padx=5, pady=5)
         self.crop_width = ttk.Entry(crop_frame1)
@@ -232,7 +232,7 @@ class ImageEditorApp:
 
         # Cropping Method 2
         crop_frame2 = ttk.LabelFrame(main_frame, text="Cropping Method 2")
-        crop_frame2.grid(row=1, column=8, columnspan=2, padx=30, pady=5, sticky='ew')
+        crop_frame2.grid(row=1, column=8, columnspan=2, padx=15, pady=5, sticky='ew')
 
         ttk.Label(crop_frame2, text="Select Shape:").grid(row=0, column=0, padx=5, pady=5)
         self.shape_var = tk.StringVar(value="Circle")
@@ -245,7 +245,7 @@ class ImageEditorApp:
 
         # Translation Section
         translate_frame = ttk.LabelFrame(main_frame, text="Translation")
-        translate_frame.grid(row=0, column=8, columnspan=2, padx=30, pady=5, sticky='ew')
+        translate_frame.grid(row=0, column=8, columnspan=2, padx=15, pady=5, sticky='ew')
 
         ttk.Label(translate_frame, text="Right :").grid(row=0, column=0)
         self.translate_right = ttk.Scale(translate_frame, from_=0, to=100, orient="horizontal")
@@ -267,7 +267,7 @@ class ImageEditorApp:
 
         # Scaling Section
         scaling_frame = ttk.LabelFrame(main_frame, text="Scaling")
-        scaling_frame.grid(row=0, column=14, columnspan=2, pady=5,padx=40, sticky='ew')
+        scaling_frame.grid(row=0, column=14, columnspan=2, pady=5,padx=17, sticky='ew')
 
         ttk.Label(scaling_frame, text="Scale X:").grid(row=0, column=0)
         self.scale_x = ttk.Scale(scaling_frame, from_=0.5, to=2.0, orient=tk.HORIZONTAL)
@@ -281,7 +281,7 @@ class ImageEditorApp:
 
         # RGB Intensity Section
         intensity_frame = ttk.LabelFrame(main_frame, text="RGB Intensity")
-        intensity_frame.grid(row=1, column=14, columnspan=2, pady=5,padx=40, sticky='ew')
+        intensity_frame.grid(row=1, column=14, columnspan=2, pady=5,padx=17, sticky='ew')
 
         ttk.Label(intensity_frame, text="Red:").grid(row=0, column=0)
         self.intensity_red = ttk.Scale(intensity_frame, from_=0, to=255, orient=tk.HORIZONTAL)
@@ -299,7 +299,7 @@ class ImageEditorApp:
 
         # Border Section
         border_frame = ttk.LabelFrame(main_frame, text="Border")
-        border_frame.grid(row=0, column=22, columnspan=2, pady=5,padx=40, sticky='ew')
+        border_frame.grid(row=0, column=22, columnspan=2, pady=5,padx=20, sticky='ew')
 
         ttk.Label(border_frame, text="Border Thickness:").grid(row=0, column=0)
         self.border_thickness = ttk.Scale(border_frame, from_=1, to=10, orient=tk.HORIZONTAL)
@@ -313,7 +313,7 @@ class ImageEditorApp:
 
         #overlay section
         overlay_frame = ttk.LabelFrame(main_frame, text="Image Overlay")
-        overlay_frame.grid(row=1, column=22, pady=5,padx=40, sticky='ew')
+        overlay_frame.grid(row=1, column=22, pady=5,padx=20, sticky='ew')
 
         ttk.Label(overlay_frame, text="Transparency:").grid(row=0, column=0)
         self.overlay_transparency = ttk.Scale(overlay_frame, from_=0.1, to=1.0, orient=tk.HORIZONTAL)
@@ -329,6 +329,58 @@ class ImageEditorApp:
         # Bind mouse events for dragging
         self.result_canvas.bind("<Button-1>", self.start_drag)
         self.result_canvas.bind("<B1-Motion>", self.do_drag)
+
+        # Rotation Section
+        rotation_frame = ttk.LabelFrame(main_frame, text="Rotation")
+        rotation_frame.grid(row=0, column=26, columnspan=2, pady=5, padx=25, sticky='ew')
+
+        ttk.Label(rotation_frame, text="Rotation (°):").grid(row=0, column=0)
+        self.rotation_angle = ttk.Scale(rotation_frame, from_=-360, to=360, orient=tk.HORIZONTAL)
+        self.rotation_angle.grid(row=0, column=1, sticky='ew')
+
+        ttk.Button(rotation_frame, text="Apply Rotation", command=self.apply_rotation).grid(row=1, column=0, columnspan=2, pady=5)
+
+
+        # Brightness Adjustment Section
+        brightness_frame = ttk.LabelFrame(main_frame, text="Brightness Adjustment")
+        brightness_frame.grid(row=1, column=26, columnspan=2, pady=5, padx=25, sticky='ew')
+
+        ttk.Label(brightness_frame, text="Brightness:").grid(row=0, column=0)
+        self.brightness_value = ttk.Scale(brightness_frame, from_=-100, to=100, orient=tk.HORIZONTAL)
+        self.brightness_value.grid(row=0, column=1, sticky='ew')
+
+        ttk.Button(brightness_frame, text="Apply Brightness", command=self.apply_brightness).grid(row=1, column=0, columnspan=2, pady=5)
+
+
+        # Contrast Adjustment Section
+        contrast_frame = ttk.LabelFrame(main_frame, text="Contrast Adjustment")
+        contrast_frame.grid(row=0, column=30, columnspan=2, pady=5, padx=27, sticky='ew')
+
+        ttk.Label(contrast_frame, text="Contrast:").grid(row=0, column=0)
+        self.contrast_value = ttk.Scale(contrast_frame, from_=-100, to=100, orient=tk.HORIZONTAL)
+        self.contrast_value.grid(row=0, column=1, sticky='ew')
+
+        ttk.Button(contrast_frame, text="Apply Contrast", command=self.apply_contrast).grid(row=1, column=0, columnspan=2, pady=5)
+
+
+        # Coloring Filtering Section
+        filter_frame = ttk.LabelFrame(main_frame, text="Color Filtering")
+        filter_frame.grid(row=1, column=30, columnspan=2, pady=5, padx=27, sticky='ew')
+
+        # Sepia Filter Button
+        ttk.Button(filter_frame, text="Apply Sepia Filter", command=self.apply_sepia_filter).grid(row=0, column=0, columnspan=2, pady=5)
+
+        # Cyanotype Filter Button
+        ttk.Button(filter_frame, text="Apply Cyanotype Filter", command=self.apply_cyanotype_filter).grid(row=1, column=0, columnspan=2, pady=5)
+
+        # Custom Color Effect Selection
+        ttk.Label(filter_frame, text="Custom Color Effect:").grid(row=2, column=0)
+        self.custom_color_effect = ttk.Entry(filter_frame)
+        self.custom_color_effect.grid(row=2, column=1, sticky='ew')
+
+        # Apply Custom Filter Button
+        ttk.Button(filter_frame, text="Apply Custom Filter", command=self.apply_custom_color_filter).grid(row=3, column=0, columnspan=2, pady=5)
+
 
 
     def create_mathematical_operations_tab(self, parent):
@@ -591,12 +643,9 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_region_growing(self):
-        # Menggunakan gambar basis dari get_base_image
-        base_image = self.get_base_image()
-        
+        base_image = self.get_base_image()        
         if base_image:
-            # Contoh titik awal; ganti dengan koordinat aktual
-            seed_point = (50, 50)  # Replace with actual coordinates
+            seed_point = (50, 50)  
             segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_region_growing(seed_point)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
@@ -606,7 +655,7 @@ class ImageEditorApp:
 
 
     def apply_region_watershed(self):
-        base_image = self.get_base_image()  # Menggunakan get_base_image untuk mendapatkan gambar yang akan digunakan.
+        base_image = self.get_base_image() 
         if base_image:
             segmentation = ImageSegmentation(base_image)
             self.result_image = segmentation.apply_region_watershed()
@@ -617,7 +666,6 @@ class ImageEditorApp:
 
 
     def apply_kmeans_clustering(self):
-        # Gunakan get_base_image untuk menentukan gambar yang akan diproses
         base_image = self.get_base_image()
         
         if base_image:
@@ -803,7 +851,6 @@ class ImageEditorApp:
 
 
     def apply_crop_method1(self):
-        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
         base_image = self.get_base_image()
 
         if base_image:
@@ -824,18 +871,13 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_crop_method2(self):
-        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
         base_image = self.get_base_image()
 
         if base_image:
             try:
-                # Ambil bentuk dari dropdown
+                # Get Shape from dropdown
                 shape = self.shape_var.get()
-
-                # Lakukan cropping berdasarkan bentuk
                 self.result_image = basicOperations.crop_image_by_shape(base_image, shape)
-
-                # Tampilkan hasil gambar dan simpan state untuk undo
                 self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
                 self.save_state_for_undo()
             except Exception as e:
@@ -843,28 +885,20 @@ class ImageEditorApp:
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
-
-
     def apply_translation(self):
-        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
         base_image = self.get_base_image()
 
         if base_image:
             try:
-                # Ambil nilai dari slider untuk pergeseran
+                # get value from slider
                 right = int(self.translate_right.get())
                 left = int(self.translate_left.get())
                 up = int(self.translate_up.get())
                 down = int(self.translate_down.get())
 
-                # Hitung pergeseran berdasarkan input slider
                 self.result_image = basicOperations.translate(base_image, right, left, up, down)
-
-                # Tampilkan hasil gambar dan simpan state untuk undo
                 self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
                 self.save_state_for_undo()
-            except ValueError:
-                messagebox.showerror("Error", "Invalid translation values. Please enter valid integers.")
             except Exception as e:
                 messagebox.showerror("Error", f"An error occurred: {e}")
         else:
@@ -872,12 +906,9 @@ class ImageEditorApp:
 
 
     def apply_scaling(self):
-        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
         base_image = self.get_base_image()
-
         if base_image:
             try:
-                # Ambil nilai skala dari input (misalnya slider atau entry box)
                 scale_x = float(self.scale_x.get())
                 scale_y = float(self.scale_y.get())
 
@@ -896,55 +927,33 @@ class ImageEditorApp:
 
 
     def apply_rgb_intensity(self):
-        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
         base_image = self.get_base_image()
 
         if base_image:
             try:
-                # Ambil nilai intensitas RGB dari input
+                # get slider intensity
                 red = int(self.intensity_red.get())
                 green = int(self.intensity_green.get())
                 blue = int(self.intensity_blue.get())
-
-                # Validasi nilai intensitas (contoh: range 0-255)
-                if not (0 <= red <= 255 and 0 <= green <= 255 and 0 <= blue <= 255):
-                    raise ValueError("RGB intensity values must be between 0 and 255.")
-
-                # Lakukan operasi penyesuaian intensitas RGB
                 self.result_image = basicOperations.adjust_rgb_intensity(base_image, red, green, blue)
-
-                # Tampilkan hasil gambar dan simpan state untuk undo
                 self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
                 self.save_state_for_undo()
 
-            except ValueError as e:
-                messagebox.showerror("Error", f"Invalid input: {e}")
             except Exception as e:
                 messagebox.showerror("Error", f"An error occurred: {e}")
         else:
             messagebox.showwarning("Warning", "No image loaded!")
     def apply_border(self):
-        # Gunakan gambar dasar (result_image jika ada, atau left_image jika tidak ada)
         base_image = self.get_base_image()
 
         if base_image:
             try:
-                # Ambil ketebalan border dan warna dari input pengguna
+                # get slider thick
                 thickness = int(self.border_thickness.get())
-                color = self.border_color.get() or "black"  # Default ke warna hitam jika tidak ada input
-
-                # Validasi ketebalan border
-                if thickness < 0:
-                    raise ValueError("Border thickness must be a non-negative integer.")
-
-                # Tambahkan border ke gambar
+                color = self.border_color.get() or "black"  # Default default black
                 self.result_image = basicOperations.add_border(base_image, thickness, color)
-
-                # Tampilkan hasil gambar dan simpan state untuk undo
                 self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
                 self.save_state_for_undo()
-            except ValueError as e:
-                messagebox.showerror("Error", f"Invalid input: {e}")
             except Exception as e:
                 messagebox.showerror("Error", f"An error occurred: {e}")
         else:
@@ -1033,65 +1042,169 @@ class ImageEditorApp:
         else:
             messagebox.showwarning("Warning", "Please upload both base image and overlay image before applying!")
 
+
+    def apply_rotation(self):
+        base_image = self.get_base_image()
+
+        if base_image:
+            try:
+                angle = int(self.rotation_angle.get())
+                self.result_image = basicOperations.rotate_image(base_image, angle)
+
+                # Tampilkan hasil gambar
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_brightness(self):
+        base_image = self.get_base_image()
+
+        if base_image:
+            try:
+                brightness = int(self.brightness_value.get())
+                self.result_image = basicOperations.adjust_brightness(base_image, brightness)
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_contrast(self):
+        base_image = self.get_base_image()
+
+        if base_image:
+            try:
+                contrast = int(self.contrast_value.get())
+                self.result_image = basicOperations.adjust_contrast(base_image, contrast)
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_sepia_filter(self):
+        base_image = self.get_base_image()
+        if base_image:
+            try:
+                self.result_image = basicOperations.apply_sepia(base_image)
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_cyanotype_filter(self):
+        base_image = self.get_base_image()
+        if base_image:
+            try:
+                self.result_image = basicOperations.apply_cyanotype(base_image)
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+    def apply_custom_color_filter(self):
+        base_image = self.get_base_image()
+        if base_image:
+            try:
+                custom_color = self.custom_color_effect.get()
+                self.result_image = basicOperations.apply_custom_color(base_image, custom_color)
+                self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
+                self.save_state_for_undo()
+            except Exception as e:
+                messagebox.showerror("Error", f"An error occurred: {e}")
+        else:
+            messagebox.showwarning("Warning", "No image loaded!")
+
+
+
+
     def pixelwise_addition(self):
-        if self.left_image and self.right_image:
-            self.result_image = MathematicalOperations.pixelwise_addition(self.left_image, self.right_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.pixelwise_addition(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
     def pixelwise_subtraction(self):
-        if self.left_image and self.right_image:
-            self.result_image = MathematicalOperations.pixelwise_subtraction(self.left_image, self.right_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.pixelwise_subtraction(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
     def pixelwise_multiplication(self):
-        if self.left_image and self.right_image:
-            self.result_image = MathematicalOperations.pixelwise_multiplication(self.left_image, self.right_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.pixelwise_multiplication(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
     def pixelwise_division(self):
-        if self.left_image and self.right_image:
-            self.result_image = MathematicalOperations.pixelwise_division(self.left_image, self.right_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.pixelwise_division(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
     def bitwise_and(self):
-        if self.left_image and self.right_image:
-            self.result_image = MathematicalOperations.bitwise_and(self.left_image, self.right_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.bitwise_and(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
     def bitwise_or(self):
-        if self.left_image and self.right_image:
-            self.result_image = MathematicalOperations.bitwise_or(self.left_image, self.right_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.bitwise_or(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
     def bitwise_xor(self):
-        if self.left_image and self.right_image:
-            self.result_image = MathematicalOperations.bitwise_xor(self.left_image, self.right_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.bitwise_xor(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "Both images must be loaded!")
 
     def bitwise_not(self):
-        if self.left_image:
-            self.result_image = MathematicalOperations.bitwise_not(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = MathematicalOperations.bitwise_not(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
@@ -1145,40 +1258,50 @@ class ImageEditorApp:
             messagebox.showwarning("Warning", "No image loaded!")
             
     def apply_mean_filter(self):
-        if self.left_image:
-            self.result_image = TransformAndFiltering.mean_filter(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = TransformAndFiltering.mean_filter(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_median_filter(self):
-        if self.left_image:
-            self.result_image = TransformAndFiltering.med_filter(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = TransformAndFiltering.med_filter(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_gaussian_filter(self):
-        if self.left_image:
-            self.result_image = TransformAndFiltering.gaussian_filter(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = TransformAndFiltering.gaussian_filter(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_sobel(self):
-        if self.left_image:
-            self.result_image = TransformAndFiltering.sobel_filter(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = TransformAndFiltering.sobel_filter(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
     
     def apply_canny(self):
-        if self.left_image:
-            self.result_image = TransformAndFiltering.canny_filter(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = TransformAndFiltering.canny_filter(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
@@ -1186,83 +1309,104 @@ class ImageEditorApp:
         
 
     def apply_laplacian(self):
-        if self.left_image:
-            self.result_image = TransformAndFiltering.laplacian_filter(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = TransformAndFiltering.laplacian_filter(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_wiener(self):
-        if self.left_image:
-            self.result_image = ImageMatchingAndImageRestorations.wiener_filter(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = ImageMatchingAndImageRestorations.wiener_filter(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_sift(self):
-        if self.left_image:
-            NoM = int(self.number_of_Matching.get())
-            self.result_image = ImageMatchingAndImageRestorations.sift_detector(self.left_image, self.right_image, NoM)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = ImageMatchingAndImageRestorations.sift_detector(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
-            messagebox.showwarning("Warning", "No image loaded!")
+            messagebox.showwarning("Warning, Both images must be loaded!")
 
     def apply_orb(self):
-        if self.left_image:
-            NoM = int(self.number_of_Matching.get())
-            self.result_image = ImageMatchingAndImageRestorations.orb_detector(self.left_image, self.right_image, NoM)
+        base_image = self.get_base_image()
+
+        if base_image and self.right_image:
+            self.result_image = ImageMatchingAndImageRestorations.orb_detector(base_image, self.right_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
+
+
+
     def apply_dilation(self):
-        if self.left_image:
-            self.result_image = BinaryOperation.dilation(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = BinaryOperation.dilation(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_erosion(self):
-        if self.left_image:
-            self.result_image = BinaryOperation.erosion(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = BinaryOperation.erosion(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_opening(self):
-        if self.left_image:
-            self.result_image = BinaryOperation.opening(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = BinaryOperation.opening(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_closing(self):
-        if self.left_image:
-            self.result_image = BinaryOperation.closing(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = BinaryOperation.closing(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_boundary_extraction(self):
-        if self.left_image:
-            self.result_image = BinaryOperation.boundary_extraction(self.left_image)
+        base_image = self.get_base_image()
+
+        if base_image:
+            self.result_image = BinaryOperation.boundary_extraction(base_image)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
     def apply_skeletonization(self):
-        if self.left_image:
+        base_image = self.get_base_image()
+
+        if base_image:
             # Convert to grayscale and binary
-            gray_image = self.left_image.convert('L')  # Convert to grayscale
+            gray_image = base_image.convert('L')  # Convert to grayscale
             binary_image = np.array(gray_image)  # Convert to numpy array
             _, binary_image = cv2.threshold(binary_image, 127, 255, cv2.THRESH_BINARY)
             

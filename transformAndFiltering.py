@@ -5,6 +5,7 @@ from PIL import Image
 
 class TransformAndFiltering:
     @staticmethod
+
     def fourier_transformation(image):
         dft = np.fft.fft2(image)
         dft_shift = np.fft.fftshift(dft)  
