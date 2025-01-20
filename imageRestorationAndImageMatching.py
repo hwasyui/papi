@@ -23,7 +23,7 @@ class ImageMatchingAndImageRestorations:
         return Image.fromarray(filtered_image)
 
     @staticmethod
-    def sift_detector(image1, image2):
+    def sift_detector(image1, image2, number_of_matches=10):
 
         image1_array = np.array(image1)
         image2_array = np.array(image2)
@@ -37,13 +37,13 @@ class ImageMatchingAndImageRestorations:
         matches = bf.match(descriptors1, descriptors2)
         matches = sorted(matches, key=lambda x: x.distance)
 
-        matching_result = cv2.drawMatches(image1_array, keypoints1, image2_array, keypoints2, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        matching_result = cv2.drawMatches(image1_array, keypoints1, image2_array, keypoints2, matches[:number_of_matches], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
 
         return Image.fromarray(matching_result)
 
     @staticmethod
-    def orb_detector(image1, image2):
+    def orb_detector(image1, image2, number_of_matches=10):
 
         image1_array = np.array(image1)
         image2_array = np.array(image2)
@@ -59,7 +59,7 @@ class ImageMatchingAndImageRestorations:
         matches = sorted(matches, key=lambda x: x.distance)
 
 
-        result_image = cv2.drawMatches(image1_array, keypoints1, image2_array, keypoints2, matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        result_image = cv2.drawMatches(image1_array, keypoints1, image2_array, keypoints2, matches[:number_of_matches], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
 
         return Image.fromarray(result_image)
