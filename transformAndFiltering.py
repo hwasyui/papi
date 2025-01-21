@@ -34,10 +34,8 @@ class TransformAndFiltering:
 
     @staticmethod
     def med_filter(image, kernel_size=3):
-
         if kernel_size % 2 == 0:
             kernel_size += 1
-
         image_array = np.array(image)
 
         filtered_image = median_filter(image_array, size=kernel_size)
