@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from PIL import Image
+from scipy.ndimage import median_filter
 
 class TransformAndFiltering:
     @staticmethod
@@ -33,9 +34,14 @@ class TransformAndFiltering:
 
     @staticmethod
     def med_filter(image, kernel_size=3):
+
         if kernel_size % 2 == 0:
             kernel_size += 1
-        filtered_image = np.median(np.array(image), selem=np.ones((kernel_size, kernel_size)))
+
+        image_array = np.array(image)
+
+        filtered_image = median_filter(image_array, size=kernel_size)
+
         return Image.fromarray(filtered_image)
     
     @staticmethod

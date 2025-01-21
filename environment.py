@@ -688,12 +688,12 @@ class ImageEditorApp:
         pixel_ops_frame = ttk.LabelFrame(main_frame, text="Filter Operations")
         pixel_ops_frame.pack(fill=tk.X, pady=5)
 
-        kernel_size_frame = ttk.Frame(pixel_ops_frame)
-        kernel_size_frame.pack(pady=5, anchor='w')
+        kernel_size_frame_filter = ttk.Frame(pixel_ops_frame)
+        kernel_size_frame_filter.pack(pady=5, anchor='w')
 
-        ttk.Label(kernel_size_frame, text="Kernel Size:").pack(side=tk.LEFT, padx=5)
-        self.kernel_size_slider = ttk.Scale(kernel_size_frame, from_=1, to=20, orient=tk.HORIZONTAL)
-        self.kernel_size_slider.pack(side=tk.LEFT, padx=5)
+        ttk.Label(kernel_size_frame_filter, text="Kernel Size:").pack(side=tk.LEFT, padx=5)
+        self.kernel_size_slider_filter = ttk.Scale(kernel_size_frame_filter, from_=1, to=20, orient=tk.HORIZONTAL)
+        self.kernel_size_slider_filter.pack(side=tk.LEFT, padx=5)
 
         ttk.Button(pixel_ops_frame, text="Mean", command=self.apply_mean_filter).pack(side=tk.LEFT, padx=5)
         ttk.Button(pixel_ops_frame, text="Gaussian", command=self.apply_gaussian_filter).pack(side=tk.LEFT, padx=5)
@@ -1277,7 +1277,7 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
-            kernel_size = int(self.kernel_size_slider.get())
+            kernel_size = int(self.kernel_size_slider_filter.get())
             self.result_image = TransformAndFiltering.mean_filter(base_image, kernel_size)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
@@ -1288,7 +1288,7 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
-            kernel_size = int(self.kernel_size_slider.get())
+            kernel_size = int(self.kernel_size_slider_filter.get())
             self.result_image = TransformAndFiltering.med_filter(base_image, kernel_size)
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
             self.save_state_for_undo()
