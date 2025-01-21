@@ -7,33 +7,75 @@ from PIL import Image, ImageTk
 
 class ImageCompressor:
     def __init__(self, image):
-        self.image = image
+        # Convert PIL image to NumPy array
+        if isinstance(image, Image.Image):
+            self.image = np.array(image)
+        elif isinstance(image, np.ndarray):
+            self.image = image
+        else:
+            raise TypeError("Unsupported image format. Provide a PIL.Image or NumPy array.")
+
 
     def apply_rle(self):
-        pixels = np.array(self.image.convert('L')).flatten()
+        """
+        Applies Run-Length Encoding (RLE) to the image. Handles both grayscale and color images.
+        """
+        # Flatten the image for RLE processing
+        if len(self.image.shape) == 2:  # Grayscale image
+            pixels = self.image.flatten()
+        elif len(self.image.shape) == 3:  # Color image
+            # Flatten along all channels for RLE encoding
+            pixels = self.image.reshape(-1, self.image.shape[2])
+        else:
+            raise ValueError("Unsupported image format for RLE.")
+
         encoded = []
-        prev_pixel = pixels[0]
+        prev_pixel = tuple(pixels[0]) if pixels.ndim > 1 else pixels[0]
         count = 1
+
         for pixel in pixels[1:]:
-            if pixel == prev_pixel:
+            pixel_tuple = tuple(pixel) if pixels.ndim > 1 else pixel
+            if pixel_tuple == prev_pixel:
                 count += 1
             else:
                 encoded.append((prev_pixel, count))
-                prev_pixel = pixel
+                prev_pixel = pixel_tuple
                 count = 1
+
         encoded.append((prev_pixel, count))
         return encoded
 
     def run_length_decoding(self, encoded):
+        """
+        Decodes an RLE-encoded image back to its original format. Handles both grayscale and color images.
+        """
         decoded = []
         for pixel, count in encoded:
             decoded.extend([pixel] * count)
+
         decoded_array = np.array(decoded, dtype=np.uint8)
-        size = self.image.size[::-1]  # Get original shape (height, width)
-        return decoded_array.reshape(size)  # Reshape to original image dimensions
+
+        # Determine original dimensions
+        height, width = self.image.shape[:2]
+        if len(self.image.shape) == 3:  # Color image
+            decoded_array = decoded_array.reshape((height, width, self.image.shape[2]))
+        else:  # Grayscale image
+            decoded_array = decoded_array.reshape((height, width))
+
+        return decoded_array
 
     def apply_dct(self, quality):
-        image = self.image.convert('L')
+        """
+        Applies Discrete Cosine Transform (DCT) for lossy compression.
+        """
+        # If the image is a NumPy array, convert it back to a PIL.Image to ensure compatibility
+        if isinstance(self.image, np.ndarray):
+            image = Image.fromarray(self.image)
+        else:
+            image = self.image
+
+        # Convert image to grayscale for DCT
+        image = image.convert('L')
         image = np.array(image, dtype=np.float32)
 
         # Ensure dimensions are multiples of 8
@@ -71,7 +113,7 @@ class ImageCompressor:
 
                 # Quantization (zeroing small values)
                 quantized_block = np.round(dct_block / quantization_matrix)
-                
+
                 # Remove small coefficients based on quality
                 threshold = np.max(quantized_block) * (quality / 100.0)
                 quantized_block[np.abs(quantized_block) < threshold] = 0
@@ -79,6 +121,7 @@ class ImageCompressor:
                 dct_encoded[i:i+8, j:j+8] = quantized_block * quantization_matrix
 
         return dct_encoded[:height, :width]  # Remove padding
+
 
     def inverse_dct(self, dct_encoded):
         height, width = dct_encoded.shape

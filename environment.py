@@ -483,12 +483,18 @@ class ImageEditorApp:
         base_image = self.get_base_image()
 
         if base_image:
-            # Initialize compressor and perform RLE compression
+            # Initialize compressor with the PIL image
             compressor = ImageCompressor(base_image)
+            
+            # Perform RLE compression
             rle_encoded = compressor.apply_rle()
-            self.compressed_file_size = len(rle_encoded) * 2
+            self.compressed_file_size = len(rle_encoded) * 2  # Approximate compressed size
+
+            # Decode the compressed data back to the original image
             decoded_image_array = compressor.run_length_decoding(rle_encoded)
-            self.result_image = Image.fromarray(decoded_image_array, mode='L')
+
+            # Convert decoded array back to PIL Image with the original mode
+            self.result_image = Image.fromarray(decoded_image_array, mode=base_image.mode)
 
             # Display the result image in the result canvas
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
@@ -514,7 +520,6 @@ class ImageEditorApp:
         else:
             messagebox.showwarning("Warning", "No image loaded!")
 
-
     def apply_lossy_compression(self):
         # Get the base image (result image if exists, otherwise the left/original image)
         base_image = self.get_base_image()
@@ -526,23 +531,33 @@ class ImageEditorApp:
                 return
 
             quality = int(quality)
-            compressor = ImageCompressor(base_image)
+            compressor = ImageCompressor(np.array(base_image))
 
-            # Apply DCT and get encoded data
-            dct_encoded = compressor.apply_dct(quality)
-
-            # Calculate compressed size based on non-zero coefficients
-            self.compressed_file_size = np.count_nonzero(dct_encoded) * 2  # Approximate byte size
-
-            # Decode the image from DCT
-            decoded_image = compressor.inverse_dct(dct_encoded)
-
-            # Convert to PIL Image and display
-            if isinstance(decoded_image, np.ndarray):
-                self.result_image = Image.fromarray(decoded_image.astype(np.uint8))
+            # Split image into color channels
+            if base_image.mode == 'RGB':
+                channels = base_image.split()  # R, G, B channels
             else:
-                messagebox.showwarning("Warning", "Decoded image is not in the expected format!")
+                messagebox.showwarning("Warning", "Only RGB images are supported for color lossy compression!")
                 return
+
+            # Apply DCT to each channel and store results
+            dct_encoded_channels = []
+            decoded_channels = []
+
+            for channel in channels:
+                channel_array = np.array(channel, dtype=np.float32)
+                compressor.image = channel_array  # Set current channel for processing
+                dct_encoded = compressor.apply_dct(quality)  # Apply DCT compression
+                dct_encoded_channels.append(dct_encoded)
+                decoded_channel = compressor.inverse_dct(dct_encoded)  # Decode channel
+                decoded_channels.append(decoded_channel)
+
+            # Combine decoded channels into a color image
+            decoded_image_array = np.stack(decoded_channels, axis=-1)
+            self.result_image = Image.fromarray(decoded_image_array.astype(np.uint8), mode='RGB')
+
+            # Calculate compressed file size (approximation)
+            self.compressed_file_size = sum(np.count_nonzero(channel) for channel in dct_encoded_channels) * 2
 
             # Display the result image
             self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')
@@ -558,13 +573,14 @@ class ImageEditorApp:
                 self.result_image.save(save_path, format="JPEG", quality=quality)
                 messagebox.showinfo("Success", f"Image saved successfully at: {save_path}")
 
-            # Update file size display
-            self.update_file_size_display()
 
-            # Save the current state for undo
-            self.save_state_for_undo()
-        else:
-            messagebox.showwarning("Warning", "No image loaded!")
+                # Update file size display
+                self.update_file_size_display()
+
+                # Save the current state for undo
+                self.save_state_for_undo()
+            else:
+                messagebox.showwarning("Warning", "No image loaded!")
 
     def create_segmentation_tab(self, parent):
         main_frame = ttk.Frame(parent)
