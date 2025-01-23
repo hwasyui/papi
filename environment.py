@@ -581,7 +581,6 @@ class ImageEditorApp:
                 self.save_state_for_undo()
             else:
                 pass
-
     def create_segmentation_tab(self, parent):
         main_frame = ttk.Frame(parent)
         main_frame.pack(fill=tk.X, padx=10, pady=10)
@@ -789,7 +788,8 @@ class ImageEditorApp:
     def delete_result_image(self):
         if self.result_image:
             self.result_image = None
-            self.display_image(self.result_image, self.result_canvas, self.result_zoom, 'result')  # Clear the result canvas
+            # Clear the canvas without trying to display a None image
+            self.result_canvas.delete("all")
         else:
             messagebox.showwarning("Warning", "No result image to delete!")
 
