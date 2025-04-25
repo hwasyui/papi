@@ -1,4 +1,4 @@
-# 🖼️ PAPI - Python Advanced Photo Interface
+# 🖼️ PAPI - Powerful Artistic Photo Innovator
 
 **PAPI** is a powerful image preprocessing and editing application built with **Python**, **Tkinter**, and **OpenCV**. Designed for intuitive use and packed with a wide range of features, PAPI allows users to manipulate, enhance, and analyze images in-depth.
 
@@ -63,21 +63,14 @@
 
 ## 🤝 Collaborators
 
-This project was developed through team collaboration and division of responsibilities:
+This project was built through collaboration by the following contributors:
 
-| Name | GitHub | Responsibilities |
-|------|--------|------------------|
-| **Angelica Suti Whiharto** | [@hwasyui](https://github.com/hwasyui) | UI Design & Basic Operations (Tkinter, Greyscale, Color, Flip) |
-| **Collaborator 2** | [@username2](https://github.com/username2) | Advanced Filtering, Edge Detection, Fourier & Histogram Enhancements |
-| **Collaborator 3** | [@username3](https://github.com/username3) | Compression Techniques (RLE, DCT), Image Restoration, Clustering |
-| **Collaborator 4** | [@username4](https://github.com/username4) | Image Matching, Overlay, Morphological Processing, Segmentation |
-
-> 💬 Contributions were managed using GitHub and coordinated via shared modules, issue tracking, and testing cycles.
-
----
-
-## 📸 Screenshots (Optional)
-*Add screenshots or screen recordings here to showcase the interface and features.*
+| Name | GitHub |
+|------|--------|
+| **Angelica Suti Whiharto** | [@hwasyui](https://github.com/hwasyui) |
+| **Intan Kumala Pasya** | [@tannpsy](https://github.com/tannpsy) |
+| **Rason Yudha Pati N** | [@RasonYudha4](https://github.com/RasonYudha4) |
+| **Yoel Heardly Sirait** | [@heardlyyoel](https://github.com/heardlyyoel) |
 
 ---
 
@@ -94,4 +87,5 @@ This project was developed through team collaboration and division of responsibi
 git clone https://github.com/hwasyui/papi.git
 cd papi
 pip install -r requirements.txt
-python main.py
+python environment.py
+
